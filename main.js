@@ -36,9 +36,9 @@ const createScene = () => {
     // Définition des humeurs
     const moods = [
         { name: "Joie", sphere: null, position: new BABYLON.Vector3(-80, 5, 0), color: new BABYLON.Color3(1, 0.8, 0), background: "/textures/background.jpg" },
-        { name: "Calme", sphere: null, position: new BABYLON.Vector3(0, 4, 0), color: new BABYLON.Color3(0, 0.5, 1), background: "/textures/background3.jpg" },
-        { name: "Énergie", sphere: null, position: new BABYLON.Vector3(80, 4, 0), color: new BABYLON.Color3(1, 0, 0), background: "/textures/background4.jpg" },
-        { name: "Triste", sphere: null, position: new BABYLON.Vector3(0, 4, 80), color: new BABYLON.Color3(0.5, 0.5, 0.8), background: "/textures/background2.jpg" },
+        { name: "Peur", sphere: null, position: new BABYLON.Vector3(0, 4, 0), color: new BABYLON.Color3(0.5, 0.5, 0.8), background: "/textures/background3.jpg" },
+        { name: "Colere", sphere: null, position: new BABYLON.Vector3(80, 4, 0), color: new BABYLON.Color3(1, 0, 0), background: "/textures/background4.jpg" },
+        { name: "Triste", sphere: null, position: new BABYLON.Vector3(0, 4, 80), color: new BABYLON.Color3(0, 0.5, 1), background: "/textures/background2.jpg" },
     ];
 
     // Créer les sphères lumineuses
@@ -92,7 +92,7 @@ const createScene = () => {
     camera.lowerBetaLimit = 0.1;
     camera.upperBetaLimit = Math.PI / 2;
 
-    // Lumière
+    // Lumière ambiante
     const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
     light.intensity = 0.7;
 
@@ -114,7 +114,53 @@ const createScene = () => {
     rain.maxEmitPower = 10;
     rain.gravity = new BABYLON.Vector3(0, -190.81, 0);
     rain.blendMode = BABYLON.ParticleSystem.BLENDMODE_STANDARD;
-    rain.isPickable = false; // La pluie n'interfère pas avec les clics
+    rain.isPickable = false;
+
+    // Système de tonnerre
+    const createThunderSystem = () => {
+        const thunderLight = new BABYLON.PointLight("thunderLight", new BABYLON.Vector3(0, 100, 0), scene);
+        thunderLight.intensity = 0;
+        thunderLight.diffuse = new BABYLON.Color3(0.8, 0.9, 1);
+        thunderLight.specular = new BABYLON.Color3(1, 1, 1);
+
+        const thunderSounds = [
+            new BABYLON.Sound("thunder1", "sounds/thunder1.mp3", scene, null, { autoplay: false, loop: false }),
+            new BABYLON.Sound("thunder2", "sounds/thunder2.mp3", scene, null, { autoplay: false, loop: false }),
+            new BABYLON.Sound("thunder3", "sounds/thunder3.mp3", scene, null, { autoplay: false, loop: false })
+        ];
+
+        const triggerThunder = () => {
+            const randomSound = thunderSounds[Math.floor(Math.random() * thunderSounds.length)];
+            thunderLight.intensity = 2.0;
+            setTimeout(() => {
+                thunderLight.intensity = 0;
+            }, 100 + Math.random() * 200);
+            setTimeout(() => {
+                randomSound.play();
+            }, Math.random() * 500);
+        };
+
+        let thunderInterval = null;
+        const startThunder = () => {
+            if (!thunderInterval) {
+                thunderInterval = setInterval(() => {
+                    triggerThunder();
+                }, 2000 + Math.random() * 4000);
+            }
+        };
+
+        const stopThunder = () => {
+            if (thunderInterval) {
+                clearInterval(thunderInterval);
+                thunderInterval = null;
+            }
+            thunderLight.intensity = 0;
+        };
+
+        return { startThunder, stopThunder };
+    };
+
+    const thunderSystem = createThunderSystem();
 
     // Interface GUI
     const advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
@@ -137,7 +183,7 @@ const createScene = () => {
                 const sphere = pickResult.pickedMesh;
                 const newBackground = sphere.metadata.background;
 
-                // Gestion de la pluie pour la sphère "Triste"
+                // Gestion de la pluie pour "Triste"
                 if (sphere.metadata.name === "Triste") {
                     if (!rain.isStarted()) {
                         rain.start();
@@ -148,11 +194,24 @@ const createScene = () => {
                         }, 5000); // Arrête la pluie après 5 secondes
                     }
                 } else {
-                    // Arrêter la pluie si une autre sphère est cliquée
                     if (rain.isStarted()) {
                         rain.stop();
                         notification.text = "";
                     }
+                }
+
+                // Gestion du tonnerre pour "Colere"
+                if (sphere.metadata.name === "Colere") {
+                    if (!thunderSystem.thunderInterval) { // Vérifie si le tonnerre n'est pas déjà actif
+                        thunderSystem.startThunder();
+                        notification.text = "Colère : Le tonnerre gronde, exprimant une rage intense.";
+                        setTimeout(() => {
+                            thunderSystem.stopThunder();
+                            notification.text = "";
+                        }, 5000); // Arrête le tonnerre après 5 secondes
+                    }
+                } else {
+                    thunderSystem.stopThunder();
                 }
 
                 // Changer le fond
