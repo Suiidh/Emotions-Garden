@@ -7,8 +7,6 @@ const engine = new BABYLON.Engine(canvas, true);
 
 const createScene = () => {
     const scene = new BABYLON.Scene(engine);
-
-    // Fond initial
     scene.clearColor = new BABYLON.Color4(0, 0, 0.1, 1);
 
     // Charger la serre
@@ -16,9 +14,8 @@ const createScene = () => {
         result.meshes.forEach((mesh) => {
             mesh.position = new BABYLON.Vector3(0, 0, 0);
             mesh.scaling = new BABYLON.Vector3(14, 14, 14);
-            mesh.isPickable = false; // Désactiver la pickabilité de la serre
+            mesh.isPickable = false;
         });
-        console.log("Serre chargée avec succès");
     }).catch((error) => {
         console.error("Erreur lors du chargement de serre.glb :", error);
     });
@@ -27,17 +24,16 @@ const createScene = () => {
     const ground = BABYLON.MeshBuilder.CreateDisc("ground", { radius: 200, tessellation: 64 }, scene);
     ground.rotation.x = Math.PI / 2;
     ground.position.y = -0.1;
-    const groundMaterial = new BABYLON.StandardMaterial("groundMat", scene);
-    groundMaterial.diffuseTexture = new BABYLON.Texture("/textures/grass.jpg", scene);
-    groundMaterial.specularColor = new BABYLON.Color3(0.1, 0.1, 0.1);
-    ground.material = groundMaterial;
-    ground.isPickable = false; // Désactiver la pickabilité du sol
+    ground.material = new BABYLON.StandardMaterial("groundMat", scene);
+    ground.material.diffuseTexture = new BABYLON.Texture("/textures/grass.jpg", scene);
+    ground.material.specularColor = new BABYLON.Color3(0.1, 0.1, 0.1);
+    ground.isPickable = false;
 
-    // Fond étoilé initial avec PhotoDome
+    // Fond étoilé initial
     let currentDome = new BABYLON.PhotoDome("starDome", "/textures/background.jpg", { resolution: 32, size: 1000 }, scene);
-    currentDome.isPickable = false; // Désactiver la pickabilité du dôme
+    currentDome.isPickable = false;
 
-    // Définition des humeurs avec leurs backgrounds
+    // Définition des humeurs
     const moods = [
         { name: "Joie", sphere: null, position: new BABYLON.Vector3(-80, 5, 0), color: new BABYLON.Color3(1, 0.8, 0), background: "/textures/background.jpg" },
         { name: "Calme", sphere: null, position: new BABYLON.Vector3(0, 4, 0), color: new BABYLON.Color3(0, 0.5, 1), background: "/textures/background3.jpg" },
@@ -56,7 +52,7 @@ const createScene = () => {
         sphere.material.emissiveColor = mood.color;
         sphere.material.specularColor = new BABYLON.Color3(1, 1, 1);
         sphere.metadata = { name: mood.name, background: mood.background };
-        sphere.isPickable = true; // Seules les sphères sont cliquables
+        sphere.isPickable = true;
         mood.sphere = sphere;
     });
 
@@ -100,31 +96,72 @@ const createScene = () => {
     const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
     light.intensity = 0.7;
 
-    // Interaction au clic uniquement sur les sphères
+    // Système de pluie
+    const rain = new BABYLON.ParticleSystem("rain", 20000, scene);
+    rain.particleTexture = new BABYLON.Texture("textures/water-drop.png", scene);
+    rain.emitter = new BABYLON.Vector3(0, 120, 0);
+    rain.minEmitBox = new BABYLON.Vector3(-150, -50, -150);
+    rain.maxEmitBox = new BABYLON.Vector3(150, 0, 150);
+    rain.color1 = new BABYLON.Color4(0.7, 0.8, 1.0, 0.8);
+    rain.color2 = new BABYLON.Color4(0.5, 0.7, 1.0, 0.6);
+    rain.colorDead = new BABYLON.Color4(0, 0, 1, 0);
+    rain.minSize = 1;
+    rain.maxSize = 2;
+    rain.emitRate = 5000;
+    rain.direction1 = new BABYLON.Vector3(0, -1, 0);
+    rain.direction2 = new BABYLON.Vector3(0, -1, 0);
+    rain.minEmitPower = 5;
+    rain.maxEmitPower = 10;
+    rain.gravity = new BABYLON.Vector3(0, -190.81, 0);
+    rain.blendMode = BABYLON.ParticleSystem.BLENDMODE_STANDARD;
+    rain.isPickable = false; // La pluie n'interfère pas avec les clics
+
+    // Interface GUI
+    const advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
+    const notification = new BABYLON.GUI.TextBlock();
+    notification.text = "";
+    notification.color = "white";
+    notification.fontSize = 24;
+    notification.textHorizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_RIGHT;
+    notification.textVerticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_TOP;
+    notification.paddingTop = "20px";
+    notification.paddingRight = "20px";
+    advancedTexture.addControl(notification);
+
+    // Gestion des clics
     scene.onPointerObservable.add((pointerInfo) => {
         if (pointerInfo.type === BABYLON.PointerEventTypes.POINTERDOWN) {
             const pickResult = pointerInfo.pickInfo;
-            console.log("Clic détecté :", {
-                hit: pickResult.hit,
-                pickedMesh: pickResult.pickedMesh ? pickResult.pickedMesh.name : "aucun",
-                hasMetadata: pickResult.pickedMesh && pickResult.pickedMesh.metadata ? true : false
-            });
 
             if (pickResult.hit && pickResult.pickedMesh && pickResult.pickedMesh.metadata) {
                 const sphere = pickResult.pickedMesh;
                 const newBackground = sphere.metadata.background;
 
-                // Supprimer l’ancien PhotoDome
+                // Gestion de la pluie pour la sphère "Triste"
+                if (sphere.metadata.name === "Triste") {
+                    if (!rain.isStarted()) {
+                        rain.start();
+                        notification.text = "Tristesse : Une pluie douce tombe, reflétant une mélancolie apaisante.";
+                        setTimeout(() => {
+                            rain.stop();
+                            notification.text = "";
+                        }, 5000); // Arrête la pluie après 5 secondes
+                    }
+                } else {
+                    // Arrêter la pluie si une autre sphère est cliquée
+                    if (rain.isStarted()) {
+                        rain.stop();
+                        notification.text = "";
+                    }
+                }
+
+                // Changer le fond
                 if (currentDome) {
                     currentDome.dispose();
                 }
-
-                // Créer un nouveau PhotoDome avec le nouveau background
                 currentDome = new BABYLON.PhotoDome("starDome", newBackground, { resolution: 32, size: 1000 }, scene);
-                currentDome.isPickable = false; // Désactiver la pickabilité du nouveau dôme
+                currentDome.isPickable = false;
                 console.log(`Background changé pour : ${sphere.metadata.name} (${newBackground})`);
-            } else {
-                console.log("Clic hors sphère, background inchangé");
             }
         }
     });
