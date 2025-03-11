@@ -1,45 +1,64 @@
 const canvas = document.getElementById("renderCanvas");
+if (!canvas) {
+    console.error("Canvas introuvable !");
+    throw new Error("Canvas manquant");
+}
 const engine = new BABYLON.Engine(canvas, true);
 
 const createScene = () => {
     const scene = new BABYLON.Scene(engine);
 
-    // Fond de ciel étoilé
+    // Fond initial
     scene.clearColor = new BABYLON.Color4(0, 0, 0.1, 1);
 
-    BABYLON.SceneLoader.ImportMeshAsync("", "objs/", "serre.glb", scene).then(function (result) {
-        // On parcourt tous les meshes de la serre et on les redimensionne
+    // Charger la serre
+    BABYLON.SceneLoader.ImportMeshAsync("", "/objs/", "serre.glb", scene).then((result) => {
         result.meshes.forEach((mesh) => {
-            // Position de base pour la serre
             mesh.position = new BABYLON.Vector3(0, 0, 0);
-            // Redimensionner la serre
-            mesh.scaling = new BABYLON.Vector3(14, 14, 14);  
+            mesh.scaling = new BABYLON.Vector3(14, 14, 14);
+            mesh.isPickable = false; // Désactiver la pickabilité de la serre
         });
+        console.log("Serre chargée avec succès");
+    }).catch((error) => {
+        console.error("Erreur lors du chargement de serre.glb :", error);
     });
-    
 
-    // Créer le sol de la verrière
-    const ground = BABYLON.MeshBuilder.CreateDisc("ground", {
-        radius: 200,
-        tessellation: 64
-    }, scene);
+    // Sol
+    const ground = BABYLON.MeshBuilder.CreateDisc("ground", { radius: 200, tessellation: 64 }, scene);
     ground.rotation.x = Math.PI / 2;
     ground.position.y = -0.1;
-
-    // Matériau du sol avec une texture locale
     const groundMaterial = new BABYLON.StandardMaterial("groundMat", scene);
-    const texture = new BABYLON.Texture("/textures/grass.jpg", scene);
-    groundMaterial.diffuseTexture = texture;
+    groundMaterial.diffuseTexture = new BABYLON.Texture("/textures/grass.jpg", scene);
     groundMaterial.specularColor = new BABYLON.Color3(0.1, 0.1, 0.1);
     ground.material = groundMaterial;
+    ground.isPickable = false; // Désactiver la pickabilité du sol
 
-    // Fond étoilé extérieur
-    const starDome = new BABYLON.PhotoDome(
-        "starDome",
-        "/textures/background.jpg",
-        { resolution: 32, size: 1000 },
-        scene
-    );
+    // Fond étoilé initial avec PhotoDome
+    let currentDome = new BABYLON.PhotoDome("starDome", "/textures/background.jpg", { resolution: 32, size: 1000 }, scene);
+    currentDome.isPickable = false; // Désactiver la pickabilité du dôme
+
+    // Définition des humeurs avec leurs backgrounds
+    const moods = [
+        { name: "Joie", sphere: null, position: new BABYLON.Vector3(-80, 5, 0), color: new BABYLON.Color3(1, 0.8, 0), background: "/textures/background.jpg" },
+        { name: "Calme", sphere: null, position: new BABYLON.Vector3(0, 4, 0), color: new BABYLON.Color3(0, 0.5, 1), background: "/textures/background3.jpg" },
+        { name: "Énergie", sphere: null, position: new BABYLON.Vector3(80, 4, 0), color: new BABYLON.Color3(1, 0, 0), background: "/textures/background4.jpg" },
+        { name: "Triste", sphere: null, position: new BABYLON.Vector3(0, 4, 80), color: new BABYLON.Color3(0.5, 0.5, 0.8), background: "/textures/background2.jpg" },
+    ];
+
+    // Créer les sphères lumineuses
+    const glowLayer = new BABYLON.GlowLayer("glow", scene);
+    glowLayer.intensity = 0.8;
+
+    moods.forEach((mood) => {
+        const sphere = BABYLON.MeshBuilder.CreateSphere(mood.name, { diameter: 8 }, scene);
+        sphere.position = mood.position;
+        sphere.material = new BABYLON.StandardMaterial(`${mood.name}Mat`, scene);
+        sphere.material.emissiveColor = mood.color;
+        sphere.material.specularColor = new BABYLON.Color3(1, 1, 1);
+        sphere.metadata = { name: mood.name, background: mood.background };
+        sphere.isPickable = true; // Seules les sphères sont cliquables
+        mood.sphere = sphere;
+    });
 
     // Particules étoiles extérieures
     const stars = new BABYLON.ParticleSystem("stars", 1000, scene);
@@ -56,7 +75,18 @@ const createScene = () => {
     stars.maxLifeTime = 2.0;
     stars.start();
 
-
+    // Particules scintillantes dans la verrière
+    const particles = new BABYLON.ParticleSystem("sparkles", 500, scene);
+    particles.emitter = new BABYLON.Vector3(0, 40, 0);
+    particles.minEmitBox = new BABYLON.Vector3(-120, -10, -120);
+    particles.maxEmitBox = new BABYLON.Vector3(120, 160, 120);
+    particles.particleTexture = new BABYLON.Texture("https://www.babylonjs.com/assets/Flare.png", scene);
+    particles.color1 = new BABYLON.Color4(1, 1, 1, 1);
+    particles.color2 = new BABYLON.Color4(0.5, 0.5, 1, 1);
+    particles.minSize = 0.05;
+    particles.maxSize = 0.2;
+    particles.emitRate = 100;
+    particles.start();
 
     // Caméra
     const camera = new BABYLON.ArcRotateCamera("cam", Math.PI / 2, Math.PI / 2, 280, new BABYLON.Vector3(0, 40, 0), scene);
@@ -70,37 +100,34 @@ const createScene = () => {
     const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
     light.intensity = 0.7;
 
-    // Sphère Joie (jaune)
-    const joy = BABYLON.MeshBuilder.CreateSphere("joy", { diameter: 10 }, scene);
-    joy.position = new BABYLON.Vector3(-80, 5, 0);
-    joy.material = new BABYLON.StandardMaterial("joyMat", scene);
-    joy.material.emissiveColor = new BABYLON.Color3(1, 0.8, 0);
-    joy.material.specularColor = new BABYLON.Color3(1, 1, 1);
+    // Interaction au clic uniquement sur les sphères
+    scene.onPointerObservable.add((pointerInfo) => {
+        if (pointerInfo.type === BABYLON.PointerEventTypes.POINTERDOWN) {
+            const pickResult = pointerInfo.pickInfo;
+            console.log("Clic détecté :", {
+                hit: pickResult.hit,
+                pickedMesh: pickResult.pickedMesh ? pickResult.pickedMesh.name : "aucun",
+                hasMetadata: pickResult.pickedMesh && pickResult.pickedMesh.metadata ? true : false
+            });
 
-    // Sphère Calme (bleu)
-    const calm = BABYLON.MeshBuilder.CreateSphere("calm", { diameter: 8 }, scene);
-    calm.position = new BABYLON.Vector3(0, 4, 0);
-    calm.material = new BABYLON.StandardMaterial("calmMat", scene);
-    calm.material.emissiveColor = new BABYLON.Color3(0, 0.5, 1);
-    calm.material.alpha = 0.9;
+            if (pickResult.hit && pickResult.pickedMesh && pickResult.pickedMesh.metadata) {
+                const sphere = pickResult.pickedMesh;
+                const newBackground = sphere.metadata.background;
 
-    // Sphère Énergie (rouge)
-    const energy = BABYLON.MeshBuilder.CreateSphere("energy", { diameter: 8 }, scene);
-    energy.position = new BABYLON.Vector3(80, 4, 0);
-    energy.material = new BABYLON.StandardMaterial("energyMat", scene);
-    energy.material.emissiveColor = new BABYLON.Color3(1, 0, 0);
+                // Supprimer l’ancien PhotoDome
+                if (currentDome) {
+                    currentDome.dispose();
+                }
 
-    // Effet de lueur
-    const glowLayer = new BABYLON.GlowLayer("glow", scene);
-    glowLayer.intensity = 0.8;
-
-    // Particules scintillantes dans la verrière
-    const particles = new BABYLON.ParticleSystem("sparkles", 500, scene);
-    particles.emitter = new BABYLON.Vector3(0, 40, 0);
-    particles.minEmitBox = new BABYLON.Vector3(-120, -10, -120);
-    particles.maxEmitBox = new BABYLON.Vector3(120, 160, 120); // Ajustez les valeurs pour éviter les particules de débordement
-    particles.particleTexture = new BABYLON.Texture("https://www.babylonjs.com/assets/Flare.png", scene);
-    particles.start();
+                // Créer un nouveau PhotoDome avec le nouveau background
+                currentDome = new BABYLON.PhotoDome("starDome", newBackground, { resolution: 32, size: 1000 }, scene);
+                currentDome.isPickable = false; // Désactiver la pickabilité du nouveau dôme
+                console.log(`Background changé pour : ${sphere.metadata.name} (${newBackground})`);
+            } else {
+                console.log("Clic hors sphère, background inchangé");
+            }
+        }
+    });
 
     return scene;
 };
