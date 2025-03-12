@@ -36,60 +36,85 @@ const createScene = () => {
         new BABYLON.Vector3(-99.39, 0, -99.80)
     ];
 
-    BABYLON.SceneLoader.ImportMeshAsync("", "/objs/", "tree1.glb", scene).then((result) => {
-        tree1 = result.meshes[0];
-        tree1.position = tree1Position;
-        tree1.scaling = new BABYLON.Vector3(4.7, 4.7, 4.7);
-        tree1.isPickable = false;
-        tree1AdditionalPositions.forEach((pos, index) => {
-            const clone = tree1.clone(`tree1_clone_${index}`);
-            clone.position = pos;
-            clone.scaling = new BABYLON.Vector3(4.7, 4.7, 4.7);
-            clone.isPickable = false;
-            tree1Clones.push(clone);
-        });
-    }).catch((error) => console.error("Erreur lors du chargement de tree1.glb :", error));
-
-    BABYLON.SceneLoader.ImportMeshAsync("", "/objs/", "tree2.glb", scene).then((result) => {
-        tree2 = result.meshes[0];
-        tree2.position = tree2Position;
-        tree2.scaling = new BABYLON.Vector3(0.8, 0.8, 0.8);
-        tree2.isPickable = false;
-        tree2AdditionalPositions.forEach((pos, index) => {
-            const clone = tree2.clone(`tree2_clone_${index}`);
-            clone.position = pos;
-            clone.scaling = new BABYLON.Vector3(0.8, 0.8, 0.8);
-            clone.isPickable = false;
-            tree2Clones.push(clone);
-        });
-    }).catch((error) => console.error("Erreur lors du chargement de tree2.glb :", error));
-
-    BABYLON.SceneLoader.ImportMeshAsync("", "/objs/", "tree3.glb", scene).then((result) => {
-        tree3 = result.meshes[0];
-        tree3.position = tree3Position;
-        tree3.scaling = new BABYLON.Vector3(1.2, 1.2, 1.2);
-        tree3.isPickable = false;
-        tree3AdditionalPositions.forEach((pos, index) => {
-            const clone = tree3.clone(`tree3_clone_${index}`);
-            clone.position = pos;
-            clone.scaling = new BABYLON.Vector3(1.2, 1.2, 1.2);
-            clone.isPickable = false;
-            tree3Clones.push(clone);
-        });
-    }).catch((error) => console.error("Erreur lors du chargement de tree3.glb :", error));
+    const loadNormalTrees = () => {
+        if (!tree1) {
+            BABYLON.SceneLoader.ImportMeshAsync("", "/objs/", "tree1.glb", scene).then((result) => {
+                tree1 = result.meshes[0];
+                tree1.position = tree1Position;
+                tree1.scaling = new BABYLON.Vector3(4.7, 4.7, 4.7);
+                tree1.isPickable = false;
+                tree1AdditionalPositions.forEach((pos, index) => {
+                    const clone = tree1.clone(`tree1_clone_${index}`);
+                    clone.position = pos;
+                    clone.scaling = new BABYLON.Vector3(4.7, 4.7, 4.7);
+                    clone.isPickable = false;
+                    tree1Clones.push(clone);
+                });
+            }).catch((error) => console.error("Erreur lors du chargement de tree1.glb :", error));
+        }
+        if (!tree2) {
+            BABYLON.SceneLoader.ImportMeshAsync("", "/objs/", "tree2.glb", scene).then((result) => {
+                tree2 = result.meshes[0];
+                tree2.position = tree2Position;
+                tree2.scaling = new BABYLON.Vector3(0.8, 0.8, 0.8);
+                tree2.isPickable = false;
+                tree2AdditionalPositions.forEach((pos, index) => {
+                    const clone = tree2.clone(`tree2_clone_${index}`);
+                    clone.position = pos;
+                    clone.scaling = new BABYLON.Vector3(0.8, 0.8, 0.8);
+                    clone.isPickable = false;
+                    tree2Clones.push(clone);
+                });
+            }).catch((error) => console.error("Erreur lors du chargement de tree2.glb :", error));
+        }
+        if (!tree3) {
+            BABYLON.SceneLoader.ImportMeshAsync("", "/objs/", "tree3.glb", scene).then((result) => {
+                tree3 = result.meshes[0];
+                tree3.position = tree3Position;
+                tree3.scaling = new BABYLON.Vector3(1.2, 1.2, 1.2);
+                tree3.isPickable = false;
+                tree3AdditionalPositions.forEach((pos, index) => {
+                    const clone = tree3.clone(`tree3_clone_${index}`);
+                    clone.position = pos;
+                    clone.scaling = new BABYLON.Vector3(1.2, 1.2, 1.2);
+                    clone.isPickable = false;
+                    tree3Clones.push(clone);
+                });
+            }).catch((error) => console.error("Erreur lors du chargement de tree3.glb :", error));
+        }
+    };
+    loadNormalTrees(); // Charger les arbres au démarrage
 
     // Horror tree
     let horrorTree = null;
+    const loadHorrorTree = () => {
+        if (horrorTree) {
+            horrorTree.dispose(); // Supprime l'ancien horrorTree avant de recharger
+            horrorTree = null;
+        }
+        BABYLON.SceneLoader.ImportMeshAsync("", "/objs/", "horror_tree.glb", scene).then((result) => {
+            horrorTree = result.meshes[0];
+            horrorTree.position = new BABYLON.Vector3(60, -0.3, -100);
+            horrorTree.rotation = new BABYLON.Vector3(0, -8, 0);
+            horrorTree.scaling = new BABYLON.Vector3(25, 25, 25);
+            horrorTree.isPickable = false;
+        }).catch((error) => console.error("Erreur lors du chargement de horror_tree.glb :", error));
+    };
 
     // Charger le banc
     let bench = null;
-    BABYLON.SceneLoader.ImportMeshAsync("", "/objs/", "bench.glb", scene).then((result) => {
-        bench = result.meshes[0];
-        bench.position = new BABYLON.Vector3(-50, 0, 100);
-        bench.scaling = new BABYLON.Vector3(25, 25, 25);
-        bench.rotation = new BABYLON.Vector3(0, -10, 0);
-        bench.isPickable = false;
-    }).catch((error) => console.error("Erreur lors du chargement de bench.glb :", error));
+    const loadBench = () => {
+        if (!bench) {
+            BABYLON.SceneLoader.ImportMeshAsync("", "/objs/", "bench.glb", scene).then((result) => {
+                bench = result.meshes[0];
+                bench.position = new BABYLON.Vector3(-50, 0, 100);
+                bench.scaling = new BABYLON.Vector3(25, 25, 25);
+                bench.rotation = new BABYLON.Vector3(0, -10, 0);
+                bench.isPickable = false;
+            }).catch((error) => console.error("Erreur lors du chargement de bench.glb :", error));
+        }
+    };
+    loadBench(); // Charger le banc au démarrage
 
     // Charger les pommes de pin
     let pineCone = null, pineConeClones = [];
@@ -100,19 +125,24 @@ const createScene = () => {
         new BABYLON.Vector3(-110, 0, 60),
         new BABYLON.Vector3(-95, 0, -95)
     ];
-    BABYLON.SceneLoader.ImportMeshAsync("", "/objs/", "pine_cone.glb", scene).then((result) => {
-        pineCone = result.meshes[0];
-        pineCone.position = pineConePositions[0];
-        pineCone.scaling = new BABYLON.Vector3(1, 1, 1);
-        pineCone.isPickable = false;
-        pineConePositions.slice(1).forEach((pos, index) => {
-            const clone = pineCone.clone(`pine_cone_clone_${index}`);
-            clone.position = pos;
-            clone.scaling = new BABYLON.Vector3(1, 1, 1);
-            clone.isPickable = false;
-            pineConeClones.push(clone);
-        });
-    }).catch((error) => console.error("Erreur lors du chargement de pine_cone.glb :", error));
+    const loadPineCones = () => {
+        if (!pineCone) {
+            BABYLON.SceneLoader.ImportMeshAsync("", "/objs/", "pine_cone.glb", scene).then((result) => {
+                pineCone = result.meshes[0];
+                pineCone.position = pineConePositions[0];
+                pineCone.scaling = new BABYLON.Vector3(1, 1, 1);
+                pineCone.isPickable = false;
+                pineConePositions.slice(1).forEach((pos, index) => {
+                    const clone = pineCone.clone(`pine_cone_clone_${index}`);
+                    clone.position = pos;
+                    clone.scaling = new BABYLON.Vector3(1, 1, 1);
+                    clone.isPickable = false;
+                    pineConeClones.push(clone);
+                });
+            }).catch((error) => console.error("Erreur lors du chargement de pine_cone.glb :", error));
+        }
+    };
+    loadPineCones(); // Charger les pommes de pin au démarrage
 
     // Sol
     const ground = BABYLON.MeshBuilder.CreateDisc("ground", { radius: 200, tessellation: 64 }, scene);
@@ -270,39 +300,7 @@ const createScene = () => {
     butterflies.minEmitPower = 0.5;
     butterflies.maxEmitPower = 1;
 
-    // Screamer
-    const screamerPlane = BABYLON.MeshBuilder.CreatePlane("screamerPlane", { size: 50 }, scene);
-    screamerPlane.position = new BABYLON.Vector3(0, 20, 0);
-    screamerPlane.isVisible = false;
-    const screamerMaterial = new BABYLON.StandardMaterial("screamerMat", scene);
-    screamerMaterial.diffuseTexture = new BABYLON.Texture("/textures/phantom.png", scene);
-    screamerMaterial.emissiveColor = new BABYLON.Color3(0.8, 0.8, 1);
-    screamerMaterial.diffuseTexture.hasAlpha = true;
-    screamerPlane.material = screamerMaterial;
-    const screamerSound = new BABYLON.Sound("screamerSound", "/sounds/scream.mp3", scene, null, { autoplay: false, loop: false });
-
-    const triggerScreamer = (callback) => {
-        screamerPlane.isVisible = true;
-        screamerSound.play();
-        screamerPlane.position = camera.position.add(camera.getDirection(BABYLON.Vector3.Forward()).scale(50));
-        screamerPlane.lookAt(camera.position);
-        let time = 0;
-        const animation = scene.registerBeforeRender(() => {
-            time += engine.getDeltaTime() / 1000;
-            const scale = 1 + Math.sin(time * 10) * 0.2;
-            screamerPlane.scaling = new BABYLON.Vector3(scale, scale, scale);
-            screamerPlane.position.z -= time * 20;
-            if (time >= 2) {
-                screamerPlane.isVisible = false;
-                screamerPlane.position = new BABYLON.Vector3(0, 20, 0);
-                screamerPlane.scaling = new BABYLON.Vector3(1, 1, 1);
-                scene.unregisterBeforeRender(animation);
-                if (callback) callback();
-            }
-        });
-    };
-
-    // GUI
+    // GUI pour la modale
     const advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
     const notification = new BABYLON.GUI.TextBlock();
     notification.text = "";
@@ -335,6 +333,57 @@ const createScene = () => {
         loader.isVisible = false;
         console.log("Chargement terminé !");
     }, 3000);
+
+    // Modale pour le screamer
+    const screamerModal = new BABYLON.GUI.Rectangle();
+    screamerModal.width = 1.0; // Plein écran
+    screamerModal.height = 1.0;
+    screamerModal.thickness = 0; // Pas de bordure
+    screamerModal.background = "transparent"; // Fond transparent
+    screamerModal.isVisible = false;
+    advancedTexture.addControl(screamerModal);
+
+    const screamerImage = new BABYLON.GUI.Image("screamerImage", "/textures/screamer.png");
+    screamerImage.stretch = BABYLON.GUI.Image.STRETCH_FILL; // Remplit totalement la modale
+    screamerImage.width = 1.0; // 100% de la largeur
+    screamerImage.height = 1.0; // 100% de la hauteur
+    screamerModal.addControl(screamerImage);
+
+    const screamerSound = new BABYLON.Sound("screamerSound", "/sounds/scream.mp3", scene, null, { autoplay: false, loop: false, volume: 1.0 });
+
+    const triggerScreamer = (callback, newBackground, newGroundTexture) => {
+        if (tree1) tree1.dispose();
+        if (tree2) tree2.dispose();
+        if (tree3) tree3.dispose();
+        tree1Clones.forEach(clone => clone.dispose());
+        tree2Clones.forEach(clone => clone.dispose());
+        tree3Clones.forEach(clone => clone.dispose());
+        tree1 = null;
+        tree2 = null;
+        tree3 = null;
+        tree1Clones = [];
+        tree2Clones = [];
+        tree3Clones = [];
+        if (pineCone) pineCone.dispose();
+        pineConeClones.forEach(clone => clone.dispose());
+        pineCone = null;
+        pineConeClones = [];
+        loadBench(); // Charger le banc pour "Peur"
+        loadHorrorTree(); // Charger horrorTree en s'assurant de supprimer l'ancien
+        if (currentDome) currentDome.dispose();
+        currentDome = new BABYLON.PhotoDome("starDome", newBackground, { resolution: 32, size: 1000 }, scene);
+        currentDome.isPickable = false;
+        ground.material.diffuseTexture = new BABYLON.Texture(newGroundTexture, scene);
+
+        screamerModal.isVisible = true;
+        screamerSound.play();
+        console.log("Screamer modale affichée !");
+
+        setTimeout(() => {
+            screamerModal.isVisible = false;
+            if (callback) callback();
+        }, 1000);
+    };
 
     const stopFireInstantly = () => {
         fire.stop();
@@ -375,6 +424,7 @@ const createScene = () => {
     };
 
     let deadTree = null;
+    let flowers = [];
 
     // Gestion des clics
     scene.onPointerObservable.add((pointerInfo) => {
@@ -390,77 +440,49 @@ const createScene = () => {
                 butterflies.stop();
                 rain.stop();
                 stopFireInstantly();
-                thunderSystem.stopThunder(); // Arrêt explicite du tonnerre
-                screamerPlane.isVisible = false;
+                thunderSystem.stopThunder();
+                screamerModal.isVisible = false;
 
-                // Gestion des arbres pour "Peur"
-                if (mesh.metadata.name === "Peur") {
-                    if (tree1) tree1.dispose();
-                    if (tree2) tree2.dispose();
-                    if (tree3) tree3.dispose();
-                    tree1Clones.forEach(clone => clone.dispose());
-                    tree2Clones.forEach(clone => clone.dispose());
-                    tree3Clones.forEach(clone => clone.dispose());
-                    tree1 = null;
-                    tree2 = null;
-                    tree3 = null;
-                    tree1Clones = [];
-                    tree2Clones = [];
-                    tree3Clones = [];
-                    if (!horrorTree) {
-                        BABYLON.SceneLoader.ImportMeshAsync("", "/objs/", "horror_tree.glb", scene).then((result) => {
-                            horrorTree = result.meshes[0];
-                            horrorTree.position = new BABYLON.Vector3(60, 0, -100);
-                            horrorTree.rotation = new BABYLON.Vector3(0, -8, 0);
-                            horrorTree.scaling = new BABYLON.Vector3(25, 25, 25);
-                            horrorTree.isPickable = false;
-                        }).catch((error) => console.error("Erreur lors du chargement de horror_tree.glb :", error));
-                    }
-                } else if (horrorTree) {
-                    horrorTree.dispose();
-                    horrorTree = null;
-                    BABYLON.SceneLoader.ImportMeshAsync("", "/objs/", "tree1.glb", scene).then((result) => {
-                        tree1 = result.meshes[0];
-                        tree1.position = tree1Position;
-                        tree1.scaling = new BABYLON.Vector3(4.7, 4.7, 4.7);
-                        tree1.isPickable = false;
-                        tree1AdditionalPositions.forEach((pos, index) => {
-                            const clone = tree1.clone(`tree1_clone_${index}`);
-                            clone.position = pos;
-                            clone.scaling = new BABYLON.Vector3(4.7, 4.7, 4.7);
-                            clone.isPickable = false;
-                            tree1Clones.push(clone);
-                        });
+                // Supprimer les fleurs sauf pour "Joie"
+                if (mesh.metadata.name !== "Joie") {
+                    flowers.forEach(flower => {
+                        if (flower) flower.dispose();
                     });
-                    BABYLON.SceneLoader.ImportMeshAsync("", "/objs/", "tree2.glb", scene).then((result) => {
-                        tree2 = result.meshes[0];
-                        tree2.position = tree2Position;
-                        tree2.scaling = new BABYLON.Vector3(0.8, 0.8, 0.8);
-                        tree2.isPickable = false;
-                        tree2AdditionalPositions.forEach((pos, index) => {
-                            const clone = tree2.clone(`tree2_clone_${index}`);
-                            clone.position = pos;
-                            clone.scaling = new BABYLON.Vector3(0.8, 0.8, 0.8);
-                            clone.isPickable = false;
-                            tree2Clones.push(clone);
-                        });
-                    });
-                    BABYLON.SceneLoader.ImportMeshAsync("", "/objs/", "tree3.glb", scene).then((result) => {
-                        tree3 = result.meshes[0];
-                        tree3.position = tree3Position;
-                        tree3.scaling = new BABYLON.Vector3(1.2, 1.2, 1.2);
-                        tree3.isPickable = false;
-                        tree3AdditionalPositions.forEach((pos, index) => {
-                            const clone = tree3.clone(`tree3_clone_${index}`);
-                            clone.position = pos;
-                            clone.scaling = new BABYLON.Vector3(1.2, 1.2, 1.2);
-                            clone.isPickable = false;
-                            tree3Clones.push(clone);
-                        });
-                    });
+                    flowers = [];
                 }
 
-                if (mesh.metadata.name === "Colere") {
+                // Gestion des éléments pour chaque humeur
+                if (mesh.metadata.name === "Joie") {
+                    loadNormalTrees();
+                    loadBench();
+                    loadPineCones();
+                    if (horrorTree) {
+                        horrorTree.dispose();
+                        horrorTree = null;
+                    }
+                    if (deadTree) {
+                        deadTree.dispose();
+                        deadTree = null;
+                    }
+                    const flowerFiles = ["flower1.glb", "flower2.glb", "flower3.glb", "flower4.glb"];
+                    const positions = [
+                        new BABYLON.Vector3(50, -10, 50),
+                        new BABYLON.Vector3(-50, -10, 50),
+                        new BABYLON.Vector3(50, -10, -50),
+                        new BABYLON.Vector3(-50, -10, -50)
+                    ];
+                    flowerFiles.forEach((file, index) => {
+                        if (!flowers[index]) {
+                            BABYLON.SceneLoader.ImportMeshAsync("", "/objs/", file, scene).then((result) => {
+                                const flower = result.meshes[0];
+                                flower.position = positions[index];
+                                flower.scaling = new BABYLON.Vector3(1, 1, 1);
+                                flower.isPickable = false;
+                                flowers[index] = flower;
+                            }).catch((error) => console.error(`Erreur lors du chargement de ${file} :`, error));
+                        }
+                    });
+                } else if (mesh.metadata.name === "Peur") {
                     if (tree1) tree1.dispose();
                     if (tree2) tree2.dispose();
                     if (tree3) tree3.dispose();
@@ -473,18 +495,41 @@ const createScene = () => {
                     tree1Clones = [];
                     tree2Clones = [];
                     tree3Clones = [];
-                
+                    if (deadTree) {
+                        deadTree.dispose();
+                        deadTree = null;
+                    }
+                    if (pineCone) pineCone.dispose();
+                    pineConeClones.forEach(clone => clone.dispose());
+                    pineCone = null;
+                    pineConeClones = [];
+                    loadBench();
+                    loadHorrorTree(); // Charger horrorTree en s'assurant de supprimer l'ancien
+                } else if (mesh.metadata.name === "Colere") {
+                    if (tree1) tree1.dispose();
+                    if (tree2) tree2.dispose();
+                    if (tree3) tree3.dispose();
+                    tree1Clones.forEach(clone => clone.dispose());
+                    tree2Clones.forEach(clone => clone.dispose());
+                    tree3Clones.forEach(clone => clone.dispose());
+                    tree1 = null;
+                    tree2 = null;
+                    tree3 = null;
+                    tree1Clones = [];
+                    tree2Clones = [];
+                    tree3Clones = [];
                     if (bench) {
                         bench.dispose();
                         bench = null;
                     }
-                    pineConeClones.forEach(clone => clone.dispose());
-                    pineConeClones = [];
-                    if (pineCone) {
-                        pineCone.dispose();
-                        pineCone = null;
+                    if (horrorTree) {
+                        horrorTree.dispose();
+                        horrorTree = null;
                     }
-                    
+                    if (pineCone) pineCone.dispose();
+                    pineConeClones.forEach(clone => clone.dispose());
+                    pineCone = null;
+                    pineConeClones = [];
                     if (!deadTree) {
                         BABYLON.SceneLoader.ImportMeshAsync("", "/objs/", "dead-tree.glb", scene).then((result) => {
                             deadTree = result.meshes[0];
@@ -493,46 +538,19 @@ const createScene = () => {
                             deadTree.isPickable = false;
                         }).catch((error) => console.error("Erreur lors du chargement de dead-tree.glb :", error));
                     }
-                } else {
-                  
+                } else if (mesh.metadata.name === "Triste") {
+                    loadNormalTrees();
+                    loadBench();
+                    loadPineCones();
+                    if (horrorTree) {
+                        horrorTree.dispose();
+                        horrorTree = null;
+                    }
                     if (deadTree) {
                         deadTree.dispose();
                         deadTree = null;
                     }
                 }
-
-
-            
-
-                if (mesh.metadata.name === "Joie") {
-                    let flowers = [];
-                    const flowerFiles = ["flower1.glb", "flower2.glb", "flower3.glb", "flower4.glb"];
-                    const positions = [
-                        new BABYLON.Vector3(50, -10, 50),
-                        new BABYLON.Vector3(-50, -10, 50),
-                        new BABYLON.Vector3(50, -10, -50),
-                        new BABYLON.Vector3(-50, -10, -50)
-                    ];
-                
-                    flowerFiles.forEach((file, index) => {
-                        if (!flowers[index]) {
-                            BABYLON.SceneLoader.ImportMeshAsync("", "/objs/", file, scene).then((result) => {
-                                const flower = result.meshes[0];
-                                flower.position = positions[index]; // Assigne une position fixe à chaque fleur
-                                flower.scaling = new BABYLON.Vector3(1, 1, 1);
-                                flower.isPickable = false;
-                                flowers[index] = flower;
-                            }).catch((error) => console.error(`Erreur lors du chargement de ${file} :`, error));
-                        }
-                    });
-                } else {
-                    flowers.forEach(flower => {
-                        if (flower) flower.dispose();
-                    });
-                    flowers = []; // Réinitialise le tableau
-                }
-                
-                
 
                 // Mise à jour du dôme et du sol
                 if (currentDome) currentDome.dispose();
@@ -554,7 +572,7 @@ const createScene = () => {
                         triggerScreamer(() => {
                             thunderSystem.startThunder();
                             setTimeout(() => loader.isVisible = false, 1000);
-                        });
+                        }, newBackground, newGroundTexture);
                         break;
                     case "Colere":
                         fire.emitter = currentDome;
@@ -565,9 +583,7 @@ const createScene = () => {
                     case "Triste":
                         rain.start();
                         thunderSystem.stopThunder();
-                        setTimeout(() => {
-                            loader.isVisible = false;
-                        }, 1000);
+                        setTimeout(() => loader.isVisible = false, 1000);
                         break;
                 }
 
