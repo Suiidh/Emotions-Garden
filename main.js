@@ -32,12 +32,12 @@ const createScene = () => {
     let currentDome = new BABYLON.PhotoDome("starDome", "/textures/background.jpg", { resolution: 32, size: 1000 }, scene);
     currentDome.isPickable = false;
 
-    // Définition des humeurs
+    // Définition des humeurs avec textures de sol
     const moods = [
-        { name: "Joie", sphere: null, position: new BABYLON.Vector3(-80, 5, 0), color: new BABYLON.Color3(1, 0.8, 0), background: "/textures/background.jpg" },
-        { name: "Peur", sphere: null, position: new BABYLON.Vector3(0, 4, 0), color: new BABYLON.Color3(0.4, 0.1, 1), background: "/textures/background2.jpg" },
-        { name: "Colere", sphere: null, position: new BABYLON.Vector3(80, 4, 0), color: new BABYLON.Color3(1, 0, 0), background: "/textures/background-colere.jpg" },
-        { name: "Triste", sphere: null, position: new BABYLON.Vector3(0, 4, 80), color: new BABYLON.Color3(0, 0.5, 1), background: "/textures/background-triste.jpg" },
+        { name: "Joie", sphere: null, position: new BABYLON.Vector3(-80, 5, 0), color: new BABYLON.Color3(1, 0.8, 0), background: "/textures/background.jpg", groundTexture: "/textures/grass.jpg" },
+        { name: "Peur", sphere: null, position: new BABYLON.Vector3(0, 4, 0), color: new BABYLON.Color3(0.4, 0.1, 1), background: "/textures/background2.jpg", groundTexture: "/textures/dark_forest.jpg" },
+        { name: "Colere", sphere: null, position: new BABYLON.Vector3(80, 4, 0), color: new BABYLON.Color3(1, 0, 0), background: "/textures/background-colere.jpg", groundTexture: "/textures/lava.jpg" },
+        { name: "Triste", sphere: null, position: new BABYLON.Vector3(0, 4, 80), color: new BABYLON.Color3(0, 0.5, 1), background: "/textures/background-triste.jpg", groundTexture: "/textures/grass.jpg" },
     ];
 
     // Sphères lumineuses 
@@ -49,7 +49,7 @@ const createScene = () => {
         sphere.material = new BABYLON.StandardMaterial(`${mood.name}Mat`, scene);
         sphere.material.emissiveColor = mood.color;
         sphere.material.specularColor = new BABYLON.Color3(1, 1, 1);
-        sphere.metadata = { name: mood.name, background: mood.background };
+        sphere.metadata = { name: mood.name, background: mood.background, groundTexture: mood.groundTexture };
         sphere.isPickable = true;
         mood.sphere = sphere;
     });
@@ -112,19 +112,19 @@ const createScene = () => {
     rain.blendMode = BABYLON.ParticleSystem.BLENDMODE_STANDARD;
 
     // Système de feu pour la colère
-    const fire = new BABYLON.ParticleSystem("fire", 3000, scene);
+    const fire = new BABYLON.ParticleSystem("fire", 300, scene);
     fire.particleTexture = new BABYLON.Texture("/textures/fire.png", scene);
     fire.emitter = currentDome;
     fire.minEmitBox = new BABYLON.Vector3(-200, 0, -200);
-    fire.maxEmitBox = new BABYLON.Vector3(200, -100, 200);
+    fire.maxEmitBox = new BABYLON.Vector3(200, -30, 200);
     fire.color1 = new BABYLON.Color4(1, 0.5, 0, 1);
     fire.color2 = new BABYLON.Color4(1, 0, 0, 1);
     fire.colorDead = new BABYLON.Color4(0.5, 0.2, 0, 0);
-    fire.minSize = 20;
-    fire.maxSize = 30;
+    fire.minSize = 15;
+    fire.maxSize = 20;
     fire.emitRate = 800;
     fire.direction1 = new BABYLON.Vector3(-0.1, 1, -0.1);
-    fire.direction2 = new BABYLON.Vector3(0.1, 2, 0.1);
+    fire.direction2 = new BABYLON.Vector3(0.1, 1.5, 0.1);
     fire.minEmitPower = 5;
     fire.maxEmitPower = 10;
     fire.minLifeTime = 2;
@@ -199,7 +199,7 @@ const createScene = () => {
     const thunderSystem = createThunderSystem();
 
     // Système de papillons pour la joie
-    const butterflies = new BABYLON.ParticleSystem("butterflies", 50, scene);
+    const butterflies = new BABYLON.ParticleSystem("butterflies", 150, scene);
     butterflies.particleTexture = new BABYLON.Texture("textures/butterfly.png", scene);
     butterflies.emitter = new BABYLON.Vector3(0, 20, 0);
     butterflies.minEmitBox = new BABYLON.Vector3(-100, 0, -100);
@@ -256,7 +256,7 @@ const createScene = () => {
         fire.reset(); // Réinitialise toutes les particules existantes
     };
 
-    // Gestion des clics avec loader
+    // Gestion des clics avec loader et changement de sol
     scene.onPointerObservable.add((pointerInfo) => {
         if (pointerInfo.type === BABYLON.PointerEventTypes.POINTERDOWN) {
             const pickResult = pointerInfo.pickInfo;
@@ -264,6 +264,7 @@ const createScene = () => {
             if (pickResult.hit && pickResult.pickedMesh && pickResult.pickedMesh.metadata) {
                 const sphere = pickResult.pickedMesh;
                 const newBackground = sphere.metadata.background;
+                const newGroundTexture = sphere.metadata.groundTexture;
 
                 // Afficher le loader
                 loader.isVisible = true;
@@ -271,7 +272,7 @@ const createScene = () => {
                 // Arrêter immédiatement toutes les animations
                 butterflies.stop();
                 rain.stop();
-                stopFireInstantly(); // Arrêt instantané du feu
+                stopFireInstantly();
                 thunderSystem.stopThunder();
                 screamerImage.isVisible = false;
                 notification.text = "";
@@ -284,7 +285,10 @@ const createScene = () => {
                     }
                     currentDome = new BABYLON.PhotoDome("starDome", newBackground, { resolution: 32, size: 1000 }, scene);
                     currentDome.isPickable = false;
-                    console.log(`Background changé pour : ${sphere.metadata.name} (${newBackground})`);
+
+                    // Changer la texture du sol
+                    ground.material.diffuseTexture = new BABYLON.Texture(newGroundTexture, scene);
+                    console.log(`Sol changé pour : ${sphere.metadata.name} (${newGroundTexture})`);
 
                     // Gestion des effets par humeur
                     switch (sphere.metadata.name) {
@@ -302,7 +306,7 @@ const createScene = () => {
                             break;
 
                         case "Colere":
-                            fire.emitter = currentDome; // Mettre à jour l’émetteur
+                            fire.emitter = currentDome;
                             fire.start();
                             thunderSystem.startThunder();
                             notification.text = "Colère : Des flammes jaillissent du bas du dôme tandis que le tonnerre gronde furieusement.";
@@ -316,7 +320,7 @@ const createScene = () => {
 
                     // Cacher le loader après la transition
                     loader.isVisible = false;
-                }, 1000); 
+                }, 500); // Délai de 500ms pour le loader
             }
         }
     });
