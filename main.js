@@ -270,40 +270,10 @@ const createScene = () => {
     butterflies.minEmitPower = 0.5;
     butterflies.maxEmitPower = 1;
 
-    // Screamer
-    const screamerPlane = BABYLON.MeshBuilder.CreatePlane("screamerPlane", { size: 50 }, scene);
-    screamerPlane.position = new BABYLON.Vector3(0, 20, 0);
-    screamerPlane.isVisible = false;
-    const screamerMaterial = new BABYLON.StandardMaterial("screamerMat", scene);
-    screamerMaterial.diffuseTexture = new BABYLON.Texture("/textures/phantom.png", scene);
-    screamerMaterial.emissiveColor = new BABYLON.Color3(0.8, 0.8, 1);
-    screamerMaterial.diffuseTexture.hasAlpha = true;
-    screamerPlane.material = screamerMaterial;
-    const screamerSound = new BABYLON.Sound("screamerSound", "/sounds/scream.mp3", scene, null, { autoplay: false, loop: false });
-
-    const triggerScreamer = (callback) => {
-        screamerPlane.isVisible = true;
-        screamerSound.play();
-        screamerPlane.position = camera.position.add(camera.getDirection(BABYLON.Vector3.Forward()).scale(50));
-        screamerPlane.lookAt(camera.position);
-        let time = 0;
-        const animation = scene.registerBeforeRender(() => {
-            time += engine.getDeltaTime() / 1000;
-            const scale = 1 + Math.sin(time * 10) * 0.2;
-            screamerPlane.scaling = new BABYLON.Vector3(scale, scale, scale);
-            screamerPlane.position.z -= time * 20;
-            if (time >= 2) {
-                screamerPlane.isVisible = false;
-                screamerPlane.position = new BABYLON.Vector3(0, 20, 0);
-                screamerPlane.scaling = new BABYLON.Vector3(1, 1, 1);
-                scene.unregisterBeforeRender(animation);
-                if (callback) callback();
-            }
-        });
-    };
-
-    // GUI
+    // GUI pour la modale
     const advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
+
+    // Notification existante
     const notification = new BABYLON.GUI.TextBlock();
     notification.text = "";
     notification.color = "white";
@@ -315,6 +285,7 @@ const createScene = () => {
     notification.paddingRight = "20px";
     advancedTexture.addControl(notification);
 
+    // Loader existant
     const loader = new BABYLON.GUI.Rectangle();
     loader.background = "black";
     loader.color = "white";
@@ -335,6 +306,63 @@ const createScene = () => {
         loader.isVisible = false;
         console.log("Chargement terminé !");
     }, 3000);
+
+    // Modale pour le screamer
+    const screamerModal = new BABYLON.GUI.Rectangle();
+    screamerModal.width = 1.0; // Plein écran
+    screamerModal.height = 1.0;
+    screamerModal.thickness = 0; // Pas de bordure
+    screamerModal.background = "transparent"; // Fond transparent
+    screamerModal.isVisible = false;
+    advancedTexture.addControl(screamerModal);
+
+    const screamerImage = new BABYLON.GUI.Image("screamerImage", "/textures/screamer.png");
+    screamerImage.stretch = BABYLON.GUI.Image.STRETCH_FILL; // Remplit totalement la modale
+    screamerImage.width = 1.0; // 100% de la largeur
+    screamerImage.height = 1.0; // 100% de la hauteur
+    screamerModal.addControl(screamerImage);
+
+    const screamerSound = new BABYLON.Sound("screamerSound", "/sounds/scream.mp3", scene, null, { autoplay: false, loop: false, volume: 1.0 });
+
+    const triggerScreamer = (callback, newBackground, newGroundTexture) => {
+        // Charger la scène "Peur" immédiatement
+        if (tree1) tree1.dispose();
+        if (tree2) tree2.dispose();
+        if (tree3) tree3.dispose();
+        tree1Clones.forEach(clone => clone.dispose());
+        tree2Clones.forEach(clone => clone.dispose());
+        tree3Clones.forEach(clone => clone.dispose());
+        tree1 = null;
+        tree2 = null;
+        tree3 = null;
+        tree1Clones = [];
+        tree2Clones = [];
+        tree3Clones = [];
+        if (!horrorTree) {
+            BABYLON.SceneLoader.ImportMeshAsync("", "/objs/", "horror_tree.glb", scene).then((result) => {
+                horrorTree = result.meshes[0];
+                horrorTree.position = new BABYLON.Vector3(60, -0.3, -100);
+                horrorTree.rotation = new BABYLON.Vector3(0, -8, 0);
+                horrorTree.scaling = new BABYLON.Vector3(25, 25, 25);
+                horrorTree.isPickable = false;
+            }).catch((error) => console.error("Erreur lors du chargement de horror_tree.glb :", error));
+        }
+        if (currentDome) currentDome.dispose();
+        currentDome = new BABYLON.PhotoDome("starDome", newBackground, { resolution: 32, size: 1000 }, scene);
+        currentDome.isPickable = false;
+        ground.material.diffuseTexture = new BABYLON.Texture(newGroundTexture, scene);
+
+        // Afficher le screamer
+        screamerModal.isVisible = true;
+        screamerSound.play();
+        console.log("Screamer modale affichée !");
+
+        // Masquer après 1 seconde
+        setTimeout(() => {
+            screamerModal.isVisible = false;
+            if (callback) callback();
+        }, 1000);
+    };
 
     const stopFireInstantly = () => {
         fire.stop();
@@ -388,33 +416,11 @@ const createScene = () => {
                 butterflies.stop();
                 rain.stop();
                 stopFireInstantly();
-                thunderSystem.stopThunder(); // Arrêt explicite du tonnerre
-                screamerPlane.isVisible = false;
+                thunderSystem.stopThunder();
+                screamerModal.isVisible = false;
 
-                // Gestion des arbres pour "Peur"
-                if (mesh.metadata.name === "Peur") {
-                    if (tree1) tree1.dispose();
-                    if (tree2) tree2.dispose();
-                    if (tree3) tree3.dispose();
-                    tree1Clones.forEach(clone => clone.dispose());
-                    tree2Clones.forEach(clone => clone.dispose());
-                    tree3Clones.forEach(clone => clone.dispose());
-                    tree1 = null;
-                    tree2 = null;
-                    tree3 = null;
-                    tree1Clones = [];
-                    tree2Clones = [];
-                    tree3Clones = [];
-                    if (!horrorTree) {
-                        BABYLON.SceneLoader.ImportMeshAsync("", "/objs/", "horror_tree.glb", scene).then((result) => {
-                            horrorTree = result.meshes[0];
-                            horrorTree.position = new BABYLON.Vector3(60, 0, -100);
-                            horrorTree.rotation = new BABYLON.Vector3(0, -8, 0);
-                            horrorTree.scaling = new BABYLON.Vector3(25, 25, 25);
-                            horrorTree.isPickable = false;
-                        }).catch((error) => console.error("Erreur lors du chargement de horror_tree.glb :", error));
-                    }
-                } else if (horrorTree) {
+                // Gestion des arbres pour les autres humeurs sauf "Peur"
+                if (mesh.metadata.name !== "Peur" && horrorTree) {
                     horrorTree.dispose();
                     horrorTree = null;
                     BABYLON.SceneLoader.ImportMeshAsync("", "/objs/", "tree1.glb", scene).then((result) => {
@@ -458,11 +464,13 @@ const createScene = () => {
                     });
                 }
 
-                // Mise à jour du dôme et du sol
-                if (currentDome) currentDome.dispose();
-                currentDome = new BABYLON.PhotoDome("starDome", newBackground, { resolution: 32, size: 1000 }, scene);
-                currentDome.isPickable = false;
-                ground.material.diffuseTexture = new BABYLON.Texture(newGroundTexture, scene);
+                // Mise à jour du dôme et du sol pour les autres humeurs sauf "Peur"
+                if (mesh.metadata.name !== "Peur") {
+                    if (currentDome) currentDome.dispose();
+                    currentDome = new BABYLON.PhotoDome("starDome", newBackground, { resolution: 32, size: 1000 }, scene);
+                    currentDome.isPickable = false;
+                    ground.material.diffuseTexture = new BABYLON.Texture(newGroundTexture, scene);
+                }
 
                 // Notification
                 notification.text = getRandomMessage(mesh.metadata.name);
@@ -477,8 +485,8 @@ const createScene = () => {
                     case "Peur":
                         triggerScreamer(() => {
                             thunderSystem.startThunder();
-                            setTimeout(() => loader.isVisible = false, 1000);
-                        });
+                            setTimeout(() => loader.isVisible = false);
+                        }, newBackground, newGroundTexture);
                         break;
                     case "Colere":
                         fire.emitter = currentDome;
