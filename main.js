@@ -374,6 +374,8 @@ const createScene = () => {
         return messages[newIndex];
     };
 
+    let deadTree = null;
+
     // Gestion des clics
     scene.onPointerObservable.add((pointerInfo) => {
         if (pointerInfo.type === BABYLON.PointerEventTypes.POINTERDOWN) {
@@ -457,6 +459,80 @@ const createScene = () => {
                         });
                     });
                 }
+
+                if (mesh.metadata.name === "Colere") {
+                    if (tree1) tree1.dispose();
+                    if (tree2) tree2.dispose();
+                    if (tree3) tree3.dispose();
+                    tree1Clones.forEach(clone => clone.dispose());
+                    tree2Clones.forEach(clone => clone.dispose());
+                    tree3Clones.forEach(clone => clone.dispose());
+                    tree1 = null;
+                    tree2 = null;
+                    tree3 = null;
+                    tree1Clones = [];
+                    tree2Clones = [];
+                    tree3Clones = [];
+                
+                    if (bench) {
+                        bench.dispose();
+                        bench = null;
+                    }
+                    pineConeClones.forEach(clone => clone.dispose());
+                    pineConeClones = [];
+                    if (pineCone) {
+                        pineCone.dispose();
+                        pineCone = null;
+                    }
+                    
+                    if (!deadTree) {
+                        BABYLON.SceneLoader.ImportMeshAsync("", "/objs/", "dead-tree.glb", scene).then((result) => {
+                            deadTree = result.meshes[0];
+                            deadTree.position = new BABYLON.Vector3(50, -5, -50);
+                            deadTree.scaling = new BABYLON.Vector3(4, 4, 4);
+                            deadTree.isPickable = false;
+                        }).catch((error) => console.error("Erreur lors du chargement de dead-tree.glb :", error));
+                    }
+                } else {
+                  
+                    if (deadTree) {
+                        deadTree.dispose();
+                        deadTree = null;
+                    }
+                }
+
+
+            
+
+                if (mesh.metadata.name === "Joie") {
+                    let flowers = [];
+                    const flowerFiles = ["flower1.glb", "flower2.glb", "flower3.glb", "flower4.glb"];
+                    const positions = [
+                        new BABYLON.Vector3(50, -10, 50),
+                        new BABYLON.Vector3(-50, -10, 50),
+                        new BABYLON.Vector3(50, -10, -50),
+                        new BABYLON.Vector3(-50, -10, -50)
+                    ];
+                
+                    flowerFiles.forEach((file, index) => {
+                        if (!flowers[index]) {
+                            BABYLON.SceneLoader.ImportMeshAsync("", "/objs/", file, scene).then((result) => {
+                                const flower = result.meshes[0];
+                                flower.position = positions[index]; // Assigne une position fixe à chaque fleur
+                                flower.scaling = new BABYLON.Vector3(1, 1, 1);
+                                flower.isPickable = false;
+                                flowers[index] = flower;
+                            }).catch((error) => console.error(`Erreur lors du chargement de ${file} :`, error));
+                        }
+                    });
+                } else {
+                    flowers.forEach(flower => {
+                        if (flower) flower.dispose();
+                    });
+                    flowers = []; // Réinitialise le tableau
+                }
+                
+                
 
                 // Mise à jour du dôme et du sol
                 if (currentDome) currentDome.dispose();
