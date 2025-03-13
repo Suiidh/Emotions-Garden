@@ -351,11 +351,11 @@ const createScene = () => {
     const thunderSystem = createThunderSystem();
 
     // Papillons
-    const butterflies = new BABYLON.ParticleSystem("butterflies", 2000, scene);
+    const butterflies = new BABYLON.ParticleSystem("butterflies", 4000, scene);
     butterflies.particleTexture = new BABYLON.Texture("textures/butterfly.png", scene);
     butterflies.emitter = new BABYLON.Vector3(0, 20, 0);
-    butterflies.minEmitBox = new BABYLON.Vector3(-300, 0, -300);
-    butterflies.maxEmitBox = new BABYLON.Vector3(200, 40, 200);
+    butterflies.minEmitBox = new BABYLON.Vector3(-195, 0, -195);
+    butterflies.maxEmitBox = new BABYLON.Vector3(150, 10, 150);
     butterflies.color1 = new BABYLON.Color4(1, 0.8, 0, 1);
     butterflies.color2 = new BABYLON.Color4(1, 1, 0, 1);
     butterflies.minSize = 3;
