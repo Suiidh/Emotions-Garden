@@ -267,9 +267,9 @@ const createScene = () => {
     // Pluie
     const rain = new BABYLON.ParticleSystem("rain", 20000, scene);
     rain.particleTexture = new BABYLON.Texture("textures/water-drop.png", scene);
-    rain.emitter = new BABYLON.Vector3(0, 120, 0);
-    rain.minEmitBox = new BABYLON.Vector3(-150, -50, -150);
-    rain.maxEmitBox = new BABYLON.Vector3(150, 0, 150);
+    rain.emitter = new BABYLON.Vector3(0, 150, 0);
+    rain.minEmitBox = new BABYLON.Vector3(-120, -50, -150);
+    rain.maxEmitBox = new BABYLON.Vector3(100, 0, 100);
     rain.color1 = new BABYLON.Color4(0.7, 0.8, 1.0, 0.8);
     rain.color2 = new BABYLON.Color4(0.5, 0.7, 1.0, 0.6);
     rain.colorDead = new BABYLON.Color4(0, 0, 1, 0);
