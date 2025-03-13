@@ -150,6 +150,28 @@ const createScene = () => {
         }
     };
 
+    // Tombes pour Peur
+    let tombstones = [];
+    const tombstonePositions = [
+        new BABYLON.Vector3(-60, -3, -90),
+        new BABYLON.Vector3(100, -3, 0),
+    ];
+    const loadTombstones = () => {
+        tombstones.forEach(tomb => tomb.dispose());
+        tombstones = [];
+        if (currentMood === "Peur" && currentIntensity >= 2) {
+            tombstonePositions.forEach((pos, index) => {
+                BABYLON.SceneLoader.ImportMeshAsync("", "/objs/", `tombstone${index + 1}.glb`, scene).then((result) => {
+                    const tomb = result.meshes[0];
+                    tomb.position = pos;
+                    tomb.scaling = new BABYLON.Vector3(25, 25, 25);
+                    tomb.isPickable = false;
+                    tombstones.push(tomb);
+                }).catch((error) => console.error(`Erreur lors du chargement de tombstone${index + 1}.glb :`, error));
+            });
+        }
+    };
+
     // Banc
     let bench = null;
     const loadBench = () => {
@@ -197,7 +219,7 @@ const createScene = () => {
     const ground = BABYLON.MeshBuilder.CreateDisc("ground", { radius: 195, tessellation: 10 }, scene);
     ground.rotation.x = Math.PI / 2;
     ground.position.y = -0.1;
-    ground.rotation.y = Math.PI / 10; 
+    ground.rotation.y = Math.PI / 10;
     ground.material = new BABYLON.StandardMaterial("groundMat", scene);
     ground.material.diffuseTexture = new BABYLON.Texture("/textures/grass.jpg", scene);
     ground.material.specularColor = new BABYLON.Color3(0.1, 0.1, 0.1);
@@ -239,6 +261,8 @@ const createScene = () => {
     // Lumière
     const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
     light.intensity = 0.7;
+    const moodLight = new BABYLON.PointLight("moodLight", new BABYLON.Vector3(0, 50, 0), scene);
+    moodLight.intensity = 0;
 
     // Pluie
     const rain = new BABYLON.ParticleSystem("rain", 20000, scene);
@@ -310,9 +334,9 @@ const createScene = () => {
             setTimeout(() => randomSound.play(), Math.random() * 500);
         };
         let thunderInterval = null;
-        const startThunder = () => {
+        const startThunder = (interval) => {
             if (!thunderInterval) {
-                thunderInterval = setInterval(triggerThunder, 2000 + Math.random() * 4000);
+                thunderInterval = setInterval(triggerThunder, interval);
             }
         };
         const stopThunder = () => {
@@ -464,19 +488,13 @@ const createScene = () => {
     intensityPanel.isVertical = true;
     intensityPanel.width = "200px";
     intensityPanel.paddingLeft = "20px";
-    intensityPanel.paddingTop = "-10px";
+    intensityPanel.paddingTop = "15px";
     intensityPanel.horizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_LEFT;
     intensityPanel.verticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_TOP;
     intensityPanel.isVisible = false;
     intensityPanel.metadata = { className: "intensity-panel" };
     advancedTexture.addControl(intensityPanel);
 
-    const intensityLabel = new BABYLON.GUI.TextBlock("intensityLabel");
-    intensityLabel.color = "white";
-    intensityLabel.fontSize = 20;
-    intensityLabel.cornerRadius = 20;
-    intensityLabel.height = "30px";
-    intensityPanel.addControl(intensityLabel);
 
     intensityButtons = [];
     for (let i = 1; i <= 3; i++) {
@@ -488,7 +506,6 @@ const createScene = () => {
         button.background = i === currentIntensity ? "black" : "grey";
         button.paddingTop = "10px";
         button.fontSize = 16;
-        button.metadata = { className: `intensity-button intensity-button-${i}` };
         button.onPointerUpObservable.add(() => {
             currentIntensity = i;
             intensityButtons.forEach((btn, idx) => {
@@ -514,39 +531,189 @@ const createScene = () => {
         if (!currentMood) return;
 
         const intensityDesc = moodData[currentMood].intensities[currentIntensity - 1].desc;
+        butterflies.stop();
+        rain.stop();
+        stopFireInstantly();
+        thunderSystem.stopThunder();
+        moodLight.intensity = 0;
+        scene.fogDensity = 0;
+        scene.animationsEnabled = true;
+
+        // Arrêter toutes les animations existantes
+        flowers.forEach(flower => {
+            if (flower && flower.animations.length > 0) {
+                scene.stopAnimation(flower);
+                flower.animations = [];
+            }
+        });
+        [tree1, tree2, tree3, ...tree1Clones, ...tree2Clones, ...tree3Clones].forEach(tree => {
+            if (tree && tree.animations.length > 0) {
+                scene.stopAnimation(tree);
+                tree.animations = [];
+            }
+        });
+        if (horrorTree && horrorTree.animations.length > 0) {
+            scene.stopAnimation(horrorTree);
+            horrorTree.animations = [];
+        }
+        if (deadTree && deadTree.animations.length > 0) {
+            scene.stopAnimation(deadTree);
+            deadTree.animations = [];
+        }
+
         updateButtonColors();
+
         switch (currentMood) {
             case "Joie":
-                butterflies.stop();
                 butterflies.emitRate = 50 * currentIntensity;
                 butterflies.minEmitPower = 0.5 * currentIntensity;
                 butterflies.maxEmitPower = 1 * currentIntensity;
                 butterflies.start();
-                break;
-            case "Peur":
-                thunderSystem.stopThunder();
-                if (currentIntensity >= 2) {
-                    thunderSystem.startThunder();
-                    if (currentIntensity === 3) {
-                        setTimeout(() => triggerScreamer(() => {}), 500);
-                    }
+                if (currentIntensity === 1) {
+                    moodLight.intensity = 0.5;
+                    moodLight.diffuse = new BABYLON.Color3(1, 0.8, 0);
+                    const pulse = new BABYLON.Animation("pulse", "intensity", 30, BABYLON.Animation.ANIMATIONTYPE_FLOAT, BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);
+                    pulse.setKeys([{ frame: 0, value: 0.5 }, { frame: 15, value: 0.7 }, { frame: 30, value: 0.5 }]);
+                    moodLight.animations = [pulse];
+                    scene.beginAnimation(moodLight, 0, 30, true);
+                } else if (currentIntensity === 2) {
+                    moodLight.intensity = 1;
+                    moodLight.diffuse = new BABYLON.Color3(1, 0.9, 0);
+                    const pulse = new BABYLON.Animation("pulse", "intensity", 60, BABYLON.Animation.ANIMATIONTYPE_FLOAT, BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);
+                    pulse.setKeys([{ frame: 0, value: 1 }, { frame: 30, value: 1.5 }, { frame: 60, value: 1 }]);
+                    moodLight.animations = [pulse];
+                    scene.beginAnimation(moodLight, 0, 60, true);
+                    flowers.forEach(flower => {
+                        const sway = new BABYLON.Animation("sway", "rotation.y", 30, BABYLON.Animation.ANIMATIONTYPE_FLOAT, BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);
+                        sway.setKeys([{ frame: 0, value: 0 }, { frame: 15, value: 0.1 }, { frame: 30, value: 0 }]);
+                        flower.animations = [sway];
+                        scene.beginAnimation(flower, 0, 30, true);
+                    });
+                } else if (currentIntensity === 3) {
+                    moodLight.intensity = 2;
+                    moodLight.diffuse = new BABYLON.Color3(1, 1, 0);
+                    const strobe = new BABYLON.Animation("strobe", "intensity", 120, BABYLON.Animation.ANIMATIONTYPE_FLOAT, BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);
+                    strobe.setKeys([{ frame: 0, value: 2 }, { frame: 30, value: 0.5 }, { frame: 60, value: 2 }, { frame: 90, value: 0.5 }, { frame: 120, value: 2 }]);
+                    moodLight.animations = [strobe];
+                    scene.beginAnimation(moodLight, 0, 120, true);
+                    flowers.forEach(flower => {
+                        const dance = new BABYLON.Animation("dance", "scaling", 60, BABYLON.Animation.ANIMATIONTYPE_VECTOR3, BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);
+                        dance.setKeys([{ frame: 0, value: new BABYLON.Vector3(1, 1, 1) }, { frame: 30, value: new BABYLON.Vector3(1.2, 1.2, 1.2) }, { frame: 60, value: new BABYLON.Vector3(1, 1, 1) }]);
+                        flower.animations = [dance];
+                        scene.beginAnimation(flower, 0, 60, true);
+                    });
                 }
                 break;
-            case "Colere":
-                stopFireInstantly();
-                fire.emitRate = 400 * currentIntensity;
-                fire.minEmitPower = 5 * currentIntensity;
-                fire.maxEmitPower = 10 * currentIntensity;
-                fire.start();
-                thunderSystem.stopThunder();
-                if (currentIntensity >= 2) thunderSystem.startThunder();
-                break;
+
             case "Triste":
-                rain.stop();
                 rain.emitRate = 2000 * currentIntensity;
                 rain.minEmitPower = 5 * currentIntensity;
                 rain.maxEmitPower = 10 * currentIntensity;
                 rain.start();
+                if (currentIntensity === 1) {
+                    moodLight.intensity = 0.3;
+                    moodLight.diffuse = new BABYLON.Color3(0.5, 0.5, 0.5);
+                } else if (currentIntensity === 2) {
+                    moodLight.intensity = 0.2;
+                    [tree1, tree2, tree3, ...tree1Clones, ...tree2Clones, ...tree3Clones].forEach(tree => {
+                        if (tree) {
+                            const bend = new BABYLON.Animation("bend", "rotation.z", 30, BABYLON.Animation.ANIMATIONTYPE_FLOAT, BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);
+                            bend.setKeys([{ frame: 0, value: 0 }, { frame: 15, value: 0.05 }, { frame: 30, value: 0 }]);
+                            tree.animations = [bend];
+                            scene.beginAnimation(tree, 0, 30, true);
+                        }
+                    });
+                } else if (currentIntensity === 3) {
+                    moodLight.intensity = 0.1;
+                    [tree1, tree2, tree3, ...tree1Clones, ...tree2Clones, ...tree3Clones].forEach(tree => {
+                        if (tree) {
+                            const shake = new BABYLON.Animation("shake", "rotation.z", 60, BABYLON.Animation.ANIMATIONTYPE_FLOAT, BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);
+                            shake.setKeys([{ frame: 0, value: 0 }, { frame: 15, value: 0.1 }, { frame: 30, value: -0.1 }, { frame: 45, value: 0.1 }, { frame: 60, value: 0 }]);
+                            tree.animations = [shake];
+                            scene.beginAnimation(tree, 0, 60, true);
+                        }
+                    });
+                }
+                break;
+
+            case "Peur":
+                loadTombstones();
+                scene.fogMode = BABYLON.Scene.FOGMODE_EXP;
+                scene.fogColor = new BABYLON.Color3(0.5, 0.5, 0.5);
+                if (horrorTree) {
+                    if (currentIntensity === 1) {
+                        moodLight.intensity = 0.2;
+                        moodLight.diffuse = new BABYLON.Color3(0.4, 0.1, 1);
+                        const flicker = new BABYLON.Animation("flicker", "intensity", 30, BABYLON.Animation.ANIMATIONTYPE_FLOAT, BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);
+                        flicker.setKeys([{ frame: 0, value: 0.2 }, { frame: 15, value: 0.3 }, { frame: 30, value: 0.2 }]);
+                        moodLight.animations = [flicker];
+                        scene.beginAnimation(moodLight, 0, 30, true);
+                        const tremble = new BABYLON.Animation("tremble", "rotation.y", 30, BABYLON.Animation.ANIMATIONTYPE_FLOAT, BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);
+                        tremble.setKeys([{ frame: 0, value: -8 }, { frame: 15, value: -8.05 }, { frame: 30, value: -8 }]);
+                        horrorTree.animations = [tremble];
+                        scene.beginAnimation(horrorTree, 0, 30, true);
+                    } else if (currentIntensity === 2) {
+                        scene.fogDensity = 0.0001;
+                        thunderSystem.startThunder(5000);
+                        moodLight.intensity = 0.5;
+                        moodLight.diffuse = new BABYLON.Color3(0.4, 0.1, 1);
+                        const flicker = new BABYLON.Animation("flicker", "intensity", 60, BABYLON.Animation.ANIMATIONTYPE_FLOAT, BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);
+                        flicker.setKeys([{ frame: 0, value: 0.5 }, { frame: 15, value: 0 }, { frame: 30, value: 0.5 }, { frame: 45, value: 0 }, { frame: 60, value: 0.5 }]);
+                        moodLight.animations = [flicker];
+                        scene.beginAnimation(moodLight, 0, 60, true);
+                    } else if (currentIntensity === 3) {
+                        scene.fogDensity = 0.0004;
+                        thunderSystem.startThunder(2000);
+                        moodLight.intensity = 1;
+                        moodLight.diffuse = new BABYLON.Color3(0.4, 0.1, 1);
+                        const strobe = new BABYLON.Animation("strobe", "intensity", 120, BABYLON.Animation.ANIMATIONTYPE_FLOAT, BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);
+                        strobe.setKeys([{ frame: 0, value: 1 }, { frame: 30, value: 0 }, { frame: 60, value: 1 }, { frame: 90, value: 0 }, { frame: 120, value: 1 }]);
+                        moodLight.animations = [strobe];
+                        scene.beginAnimation(moodLight, 0, 120, true);
+                        setTimeout(() => triggerScreamer(() => {}), 500);
+                    }
+                }
+                break;
+
+            case "Colere":
+                fire.emitRate = 400 * currentIntensity;
+                fire.minEmitPower = 5 * currentIntensity;
+                fire.maxEmitPower = 10 * currentIntensity;
+                fire.start();
+                if (deadTree) {
+                    if (currentIntensity === 1) {
+                        moodLight.intensity = 0.5;
+                        moodLight.diffuse = new BABYLON.Color3(1, 0, 0);
+                        const crack = new BABYLON.Animation("crack", "rotation.y", 30, BABYLON.Animation.ANIMATIONTYPE_FLOAT, BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);
+                        crack.setKeys([{ frame: 0, value: 0 }, { frame: 15, value: 0.05 }, { frame: 30, value: 0 }]);
+                        deadTree.animations = [crack];
+                        scene.beginAnimation(deadTree, 0, 30, true);
+                    } else if (currentIntensity === 2) {
+                        thunderSystem.startThunder(5000);
+                        moodLight.intensity = 1;
+                        moodLight.diffuse = new BABYLON.Color3(1, 0, 0);
+                        const pulse = new BABYLON.Animation("pulse", "intensity", 60, BABYLON.Animation.ANIMATIONTYPE_FLOAT, BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);
+                        pulse.setKeys([{ frame: 0, value: 1 }, { frame: 30, value: 1.5 }, { frame: 60, value: 1 }]);
+                        moodLight.animations = [pulse];
+                        scene.beginAnimation(moodLight, 0, 60, true);
+                        const shake = new BABYLON.Animation("shake", "rotation.y", 30, BABYLON.Animation.ANIMATIONTYPE_FLOAT, BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);
+                        shake.setKeys([{ frame: 0, value: 0 }, { frame: 15, value: 0.1 }, { frame: 30, value: 0 }]);
+                        deadTree.animations = [shake];
+                        scene.beginAnimation(deadTree, 0, 30, true);
+                    } else if (currentIntensity === 3) {
+                        thunderSystem.startThunder(2000);
+                        moodLight.intensity = 2;
+                        moodLight.diffuse = new BABYLON.Color3(1, 0, 0);
+                        const strobe = new BABYLON.Animation("strobe", "intensity", 120, BABYLON.Animation.ANIMATIONTYPE_FLOAT, BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);
+                        strobe.setKeys([{ frame: 0, value: 2 }, { frame: 30, value: 0.5 }, { frame: 60, value: 2 }, { frame: 90, value: 0.5 }, { frame: 120, value: 2 }]);
+                        moodLight.animations = [strobe];
+                        scene.beginAnimation(moodLight, 0, 120, true);
+                        const burn = new BABYLON.Animation("burn", "rotation.y", 60, BABYLON.Animation.ANIMATIONTYPE_FLOAT, BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);
+                        burn.setKeys([{ frame: 0, value: 0 }, { frame: 15, value: 0.2 }, { frame: 30, value: 0 }, { frame: 45, value: -0.2 }, { frame: 60, value: 0 }]);
+                        deadTree.animations = [burn];
+                        scene.beginAnimation(deadTree, 0, 60, true);
+                    }
+                }
                 break;
         }
         notification.text = intensityDesc;
@@ -556,18 +723,18 @@ const createScene = () => {
         if (currentMood && moodData[currentMood]) {
             const moodColor = moods.find(mood => mood.name === currentMood).color;
             intensityButtons.forEach(button => {
-                button.background = button.metadata.className.includes(`intensity-button-${currentIntensity}`) ? moodColor.toHexString() : "black";
+                button.background = button.metadata.className.includes(`intensity-button-${currentIntensity}`) ? moodColor.toHexString() : "grey";
                 button.onPointerEnterObservable.add(() => {
                     button.background = moodColor.toHexString();
                 });
                 button.onPointerOutObservable.add(() => {
-                    button.background = button.metadata.className.includes(`intensity-button-${currentIntensity}`) ? moodColor.toHexString() : "black";
+                    button.background = button.metadata.className.includes(`intensity-button-${currentIntensity}`) ? moodColor.toHexString() : "grey";
                 });
                 button.onPointerDownObservable.add(() => {
                     button.background = moodColor.toHexString();
                 });
                 button.onPointerUpObservable.add(() => {
-                    button.background = button.metadata.className.includes(`intensity-button-${currentIntensity}`) ? moodColor.toHexString() : "black";
+                    button.background = button.metadata.className.includes(`intensity-button-${currentIntensity}`) ? moodColor.toHexString() : "grey";
                 });
             });
         }
@@ -584,7 +751,7 @@ const createScene = () => {
 
                 currentMood = mesh.metadata.name;
                 currentIntensity = 1;
-            
+
                 updateIntensityButtonNames();
                 intensityPanel.isVisible = true;
                 infoButton.isVisible = true;
@@ -595,6 +762,8 @@ const createScene = () => {
                 stopFireInstantly();
                 thunderSystem.stopThunder();
                 screamerModal.isVisible = false;
+                tombstones.forEach(tomb => tomb.dispose());
+                tombstones = [];
 
                 if (tree1) { tree1.dispose(); tree1 = null; }
                 if (tree2) { tree2.dispose(); tree2 = null; }
@@ -634,6 +803,7 @@ const createScene = () => {
                     case "Peur":
                         loadBench();
                         loadHorrorTree();
+                        loadTombstones();
                         break;
                     case "Colere":
                         BABYLON.SceneLoader.ImportMeshAsync("", "/objs/", "dead-tree.glb", scene).then((result) => {
