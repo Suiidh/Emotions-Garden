@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html>
 <head>
@@ -22,8 +21,36 @@
 
 </head>
 <body>
-
+<div id="welcome">
+    <h1>Le Jardin des Émotions</h1>
+    <p>Un jeu pour apprendre à reconnaître et exprimer ses émotions <br/><br/> Clique sur les differentes spheres dans le jardin pour découvrir les émotions cachées à l'intérieur.</p>
+    <div class="circle-container">
+        <div>
+            <div class="circle red"></div>
+            <span class="circle-title">Colère</span>
+        </div>
+        <div>
+            <div class="circle blue"></div>
+            <span class="circle-title">Peur</span>
+        </div>
+        <div>
+            <div class="circle yellow"></div>
+            <span class="circle-title">Joie</span>
+        </div>
+        <div>
+            <div class="circle green"></div>
+            <span class="circle-title">Triste</span>
+        </div>
+    </div>
+    <button id="startButton">Start</button>
+</div>
 <canvas id="renderCanvas"></canvas>
+<script>
+    document.getElementById('startButton').onclick = function() {
+        document.getElementById('welcome').style.display = 'none';
+        document.getElementById('renderCanvas').style.display = 'block';
+    };
+</script>
 <script src="main.js"></script>
 </body>
 </html>

@@ -51,14 +51,36 @@ const createScene = () => {
         }
     };
 
+    // Track loading status
+    let elementsToLoad = 0;
+    let elementsLoaded = 0;
+
+    const checkAllElementsLoaded = () => {
+        if (elementsLoaded >= elementsToLoad) {
+            loader.isVisible = false;
+        }
+    };
+
+    const loadElement = (promise) => {
+        elementsToLoad++;
+        promise.then(() => {
+            elementsLoaded++;
+            checkAllElementsLoaded();
+        }).catch((error) => {
+            console.error("Erreur lors du chargement :", error);
+            elementsLoaded++;
+            checkAllElementsLoaded();
+        });
+    };
+
     // Charger la serre
-    BABYLON.SceneLoader.ImportMeshAsync("", "/objs/", "serre.glb", scene).then((result) => {
+    loadElement(BABYLON.SceneLoader.ImportMeshAsync("", "/objs/", "serre.glb", scene).then((result) => {
         result.meshes.forEach((mesh) => {
             mesh.position = new BABYLON.Vector3(0, 0, 0);
             mesh.scaling = new BABYLON.Vector3(14, 14, 14);
             mesh.isPickable = false;
         });
-    }).catch((error) => console.error("Erreur lors du chargement de serre.glb :", error));
+    }));
 
     // Arbres normaux
     let tree1 = null, tree2 = null, tree3 = null;
@@ -81,7 +103,7 @@ const createScene = () => {
 
     const loadNormalTrees = () => {
         if (!tree1) {
-            BABYLON.SceneLoader.ImportMeshAsync("", "/objs/", "tree1.glb", scene).then((result) => {
+            loadElement(BABYLON.SceneLoader.ImportMeshAsync("", "/objs/", "tree1.glb", scene).then((result) => {
                 tree1 = result.meshes[0];
                 tree1.position = tree1Position;
                 tree1.scaling = new BABYLON.Vector3(4.7, 4.7, 4.7);
@@ -93,10 +115,10 @@ const createScene = () => {
                     clone.isPickable = false;
                     tree1Clones.push(clone);
                 });
-            }).catch((error) => console.error("Erreur lors du chargement de tree1.glb :", error));
+            }));
         }
         if (!tree2) {
-            BABYLON.SceneLoader.ImportMeshAsync("", "/objs/", "tree2.glb", scene).then((result) => {
+            loadElement(BABYLON.SceneLoader.ImportMeshAsync("", "/objs/", "tree2.glb", scene).then((result) => {
                 tree2 = result.meshes[0];
                 tree2.position = tree2Position;
                 tree2.scaling = new BABYLON.Vector3(0.8, 0.8, 0.8);
@@ -108,10 +130,10 @@ const createScene = () => {
                     clone.isPickable = false;
                     tree2Clones.push(clone);
                 });
-            }).catch((error) => console.error("Erreur lors du chargement de tree2.glb :", error));
+            }));
         }
         if (!tree3) {
-            BABYLON.SceneLoader.ImportMeshAsync("", "/objs/", "tree3.glb", scene).then((result) => {
+            loadElement(BABYLON.SceneLoader.ImportMeshAsync("", "/objs/", "tree3.glb", scene).then((result) => {
                 tree3 = result.meshes[0];
                 tree3.position = tree3Position;
                 tree3.scaling = new BABYLON.Vector3(1.2, 1.2, 1.2);
@@ -123,7 +145,7 @@ const createScene = () => {
                     clone.isPickable = false;
                     tree3Clones.push(clone);
                 });
-            }).catch((error) => console.error("Erreur lors du chargement de tree3.glb :", error));
+            }));
         }
     };
     loadNormalTrees();
@@ -136,7 +158,7 @@ const createScene = () => {
             horrorTree = null;
         }
         if (currentMood === "Peur") {
-            BABYLON.SceneLoader.ImportMeshAsync("", "/objs/", "horror_tree.glb", scene).then((result) => {
+            loadElement(BABYLON.SceneLoader.ImportMeshAsync("", "/objs/", "horror_tree.glb", scene).then((result) => {
                 if (currentMood === "Peur") {
                     horrorTree = result.meshes[0];
                     horrorTree.position = new BABYLON.Vector3(60, -0.3, -100);
@@ -146,7 +168,7 @@ const createScene = () => {
                 } else {
                     result.meshes.forEach(mesh => mesh.dispose());
                 }
-            }).catch((error) => console.error("Erreur lors du chargement de horror_tree.glb :", error));
+            }));
         }
     };
 
@@ -161,13 +183,13 @@ const createScene = () => {
         tombstones = [];
         if (currentMood === "Peur" && currentIntensity >= 2) {
             tombstonePositions.forEach((pos, index) => {
-                BABYLON.SceneLoader.ImportMeshAsync("", "/objs/", `tombstone${index + 1}.glb`, scene).then((result) => {
+                loadElement(BABYLON.SceneLoader.ImportMeshAsync("", "/objs/", `tombstone${index + 1}.glb`, scene).then((result) => {
                     const tomb = result.meshes[0];
                     tomb.position = pos;
                     tomb.scaling = new BABYLON.Vector3(25, 25, 25);
                     tomb.isPickable = false;
                     tombstones.push(tomb);
-                }).catch((error) => console.error(`Erreur lors du chargement de tombstone${index + 1}.glb :`, error));
+                }));
             });
         }
     };
@@ -176,13 +198,13 @@ const createScene = () => {
     let bench = null;
     const loadBench = () => {
         if (!bench) {
-            BABYLON.SceneLoader.ImportMeshAsync("", "/objs/", "bench.glb", scene).then((result) => {
+            loadElement(BABYLON.SceneLoader.ImportMeshAsync("", "/objs/", "bench.glb", scene).then((result) => {
                 bench = result.meshes[0];
                 bench.position = new BABYLON.Vector3(-50, 0, 100);
                 bench.scaling = new BABYLON.Vector3(25, 25, 25);
                 bench.rotation = new BABYLON.Vector3(0, -10, 0);
                 bench.isPickable = false;
-            }).catch((error) => console.error("Erreur lors du chargement de bench.glb :", error));
+            }));
         }
     };
     loadBench();
@@ -198,7 +220,7 @@ const createScene = () => {
     ];
     const loadPineCones = () => {
         if (!pineCone) {
-            BABYLON.SceneLoader.ImportMeshAsync("", "/objs/", "pine_cone.glb", scene).then((result) => {
+            loadElement(BABYLON.SceneLoader.ImportMeshAsync("", "/objs/", "pine_cone.glb", scene).then((result) => {
                 pineCone = result.meshes[0];
                 pineCone.position = pineConePositions[0];
                 pineCone.scaling = new BABYLON.Vector3(1, 1, 1);
@@ -210,7 +232,7 @@ const createScene = () => {
                     clone.isPickable = false;
                     pineConeClones.push(clone);
                 });
-            }).catch((error) => console.error("Erreur lors du chargement de pine_cone.glb :", error));
+            }));
         }
     };
     loadPineCones();
@@ -436,20 +458,18 @@ const createScene = () => {
     const loader = new BABYLON.GUI.Rectangle("loader");
     loader.background = "black";
     loader.color = "white";
-    loader.alpha = 0.9;
     loader.thickness = 0;
+    loader.zIndex = 5;
     loader.isVisible = true;
     advancedTexture.addControl(loader);
 
     const loaderText = new BABYLON.GUI.TextBlock("loaderText");
     loaderText.text = "Chargement...";
     loaderText.color = "white";
-    loaderText.fontSize = 30;
+    loaderText.fontSize = 20;
     loaderText.textHorizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_CENTER;
     loaderText.textVerticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_CENTER;
     loader.addControl(loaderText);
-
-    setTimeout(() => loader.isVisible = false, 3000);
 
     const screamerModal = new BABYLON.GUI.Rectangle("screamerModal");
     screamerModal.width = 1.0;
@@ -757,6 +777,9 @@ const createScene = () => {
                 infoButton.isVisible = true;
 
                 loader.isVisible = true;
+                elementsToLoad = 0;
+                elementsLoaded = 0;
+
                 butterflies.stop();
                 rain.stop();
                 stopFireInstantly();
@@ -791,13 +814,13 @@ const createScene = () => {
                             new BABYLON.Vector3(-50, -10, -50)
                         ];
                         flowerFiles.forEach((file, index) => {
-                            BABYLON.SceneLoader.ImportMeshAsync("", "/objs/", file, scene).then((result) => {
+                            loadElement(BABYLON.SceneLoader.ImportMeshAsync("", "/objs/", file, scene).then((result) => {
                                 const flower = result.meshes[0];
                                 flower.position = positions[index];
                                 flower.scaling = new BABYLON.Vector3(1, 1, 1);
                                 flower.isPickable = false;
                                 flowers[index] = flower;
-                            }).catch((error) => console.error(`Erreur lors du chargement de ${file} :`, error));
+                            }));
                         });
                         break;
                     case "Peur":
@@ -806,12 +829,12 @@ const createScene = () => {
                         loadTombstones();
                         break;
                     case "Colere":
-                        BABYLON.SceneLoader.ImportMeshAsync("", "/objs/", "dead-tree.glb", scene).then((result) => {
+                        loadElement(BABYLON.SceneLoader.ImportMeshAsync("", "/objs/", "dead-tree.glb", scene).then((result) => {
                             deadTree = result.meshes[0];
                             deadTree.position = new BABYLON.Vector3(50, -5, -50);
                             deadTree.scaling = new BABYLON.Vector3(4, 4, 4);
                             deadTree.isPickable = false;
-                        }).catch((error) => console.error("Erreur lors du chargement de dead-tree.glb :", error));
+                        }));
                         break;
                     case "Triste":
                         loadNormalTrees();
@@ -826,10 +849,7 @@ const createScene = () => {
                 ground.material.diffuseTexture = new BABYLON.Texture(newGroundTexture, scene);
 
                 notification.text = moodData[currentMood].intensities[0].desc;
-                setTimeout(() => {
-                    loader.isVisible = false;
-                    updateMoodEffects();
-                }, 1000);
+                updateMoodEffects();
 
                 console.log(`Background changé pour : ${currentMood} (${newBackground})`);
                 updateButtonColors();
