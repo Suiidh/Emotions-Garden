@@ -12,6 +12,42 @@ const createScene = () => {
     let currentMood = null;
     let currentIntensity = 1; // 1 = faible, 2 = moyen, 3 = fort
 
+    // Descriptions pédagogiques complètes des émotions et niveaux d'intensité
+    const moodData = {
+        "Joie": {
+            description: "Qu’est-ce que c’est ? La joie est une émotion positive qui surgit quand on vit quelque chose d’agréable, comme réussir un défi, passer du temps avec des proches ou admirer un beau paysage. Elle nous donne de l’énergie et une envie de partager ce bonheur.\nPourquoi on la ressent ? Elle est liée à la satisfaction de nos besoins (amour, reconnaissance, plaisir) et active des zones du cerveau comme le système de récompense (dopamine).\nSignes physiques : Sourire, rire, sensation de légèreté, cœur qui bat plus vite d’excitation.\nRôle : Elle renforce nos liens sociaux et nous motive à répéter ce qui nous rend heureux.",
+            intensities: [
+                { name: "Légère satisfaction", desc: "Une petite joie, calme et discrète, comme terminer une tâche ou voir une fleur jolie." },
+                { name: "Bonheur modéré", desc: "Un contentement qui donne envie de sourire, comme après une bonne nouvelle ou un moment avec des amis." },
+                { name: "Euphorie", desc: "Un bonheur explosif et communicatif, comme célébrer une grande victoire !" }
+            ]
+        },
+        "Triste": {
+            description: "Qu’est-ce que c’est ? La tristesse apparaît quand on perd quelque chose d’important (un proche, un rêve, une opportunité) ou qu’on se sent seul. C’est une émotion qui nous ralentit et nous pousse à réfléchir.\nPourquoi on la ressent ? Elle nous aide à accepter une perte et à demander du soutien. Elle est liée à une baisse de certains neurotransmetteurs comme la sérotonine.\nSignes physiques : Larmes, boule dans la gorge, fatigue, envie de se replier sur soi.\nRôle : Elle nous permet de faire le deuil et de signaler aux autres qu’on a besoin d’aide.",
+            intensities: [
+                { name: "Mélancolie légère", desc: "Un sentiment nostalgique ou pensif, comme regarder la pluie par la fenêtre." },
+                { name: "Chagrin modéré", desc: "Une tristesse plus marquée, avec les larmes proches, après une déception." },
+                { name: "Désespoir profond", desc: "Une tristesse écrasante, comme après une perte majeure, où tout semble lourd." }
+            ]
+        },
+        "Peur": {
+            description: "Qu’est-ce que c’est ? La peur est une réaction face à un danger, réel ou imaginaire. Elle nous alerte pour nous protéger, comme quand on entend un bruit bizarre la nuit.\nPourquoi on la ressent ? Elle est déclenchée par l’amygdale (une partie du cerveau) qui active le mode 'survie' (adrénaline). C’est une émotion instinctive.\nSignes physiques : Cœur qui s’accélère, sueurs, tremblements, envie de fuir ou de se cacher.\nRôle : Elle nous prépare à réagir vite (combattre ou fuir) pour rester en sécurité.",
+            intensities: [
+                { name: "Inquiétude légère", desc: "Une petite tension ou un doute, alerte mais pas de panique." },
+                { name: "Angoisse modérée", desc: "Une peur croissante, comme si quelque chose te suivait dans le noir." },
+                { name: "Terreur intense", desc: "Une panique totale face à un danger imminent, où la survie domine." }
+            ]
+        },
+        "Colere": {
+            description: "Qu’est-ce que c’est ? La colère surgit quand on se sent attaqué, injustement traité ou bloqué dans un objectif. C’est une énergie puissante qui pousse à agir.\nPourquoi on la ressent ? Elle est liée à une montée d’adrénaline et à un sentiment d’injustice ou de frustration.\nSignes physiques : Mâchoire serrée, chaleur au visage, muscles tendus, voix qui monte.\nRôle : Elle nous aide à défendre nos droits ou à surmonter des obstacles, mais mal gérée, elle peut devenir destructrice.",
+            intensities: [
+                { name: "Irritation légère", desc: "Un agacement contrôlé, comme quand quelqu’un te coupe la parole." },
+                { name: "Frustration modérée", desc: "Une colère qui monte, avec envie de crier, face à une injustice répétée." },
+                { name: "Rage explosive", desc: "Une colère hors de contrôle, prête à tout détruire, face à une frustration extrême." }
+            ]
+        }
+    };
+
     // Charger la serre
     BABYLON.SceneLoader.ImportMeshAsync("", "/objs/", "serre.glb", scene).then((result) => {
         result.meshes.forEach((mesh) => {
@@ -310,6 +346,59 @@ const createScene = () => {
     notification.paddingRight = "20px";
     advancedTexture.addControl(notification);
 
+    // Bouton pour afficher la description
+    const infoButton = BABYLON.GUI.Button.CreateSimpleButton("infoButton", "Info Émotion");
+    infoButton.width = "120px";
+    infoButton.height = "40px";
+    infoButton.color = "white";
+    infoButton.background = "grey";
+    infoButton.horizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_RIGHT;
+    infoButton.verticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_TOP;
+    infoButton.top = "60px"; // Sous la notification
+    infoButton.paddingRight = "20px";
+    infoButton.isVisible = false; // Caché par défaut
+    advancedTexture.addControl(infoButton);
+
+    // Modale pour la description
+    const descriptionModal = new BABYLON.GUI.Rectangle();
+    descriptionModal.width = "500px";
+    descriptionModal.height = "400px";
+    descriptionModal.background = "rgba(0, 0, 0, 0.9)";
+    descriptionModal.color = "white";
+    descriptionModal.thickness = 2;
+    descriptionModal.isVisible = false;
+    advancedTexture.addControl(descriptionModal);
+
+    const modalText = new BABYLON.GUI.TextBlock();
+    modalText.text = "";
+    modalText.color = "white";
+    modalText.fontSize = 18;
+    modalText.textWrapping = true;
+    modalText.paddingLeft = "20px";
+    modalText.paddingRight = "20px";
+    modalText.textHorizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_LEFT;
+    modalText.textVerticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_TOP;
+    descriptionModal.addControl(modalText);
+
+    const closeButton = BABYLON.GUI.Button.CreateSimpleButton("closeButton", "Fermer");
+    closeButton.width = "100px";
+    closeButton.height = "40px";
+    closeButton.color = "white";
+    closeButton.background = "grey";
+    closeButton.verticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_BOTTOM;
+    closeButton.top = "-20px";
+    closeButton.onPointerUpObservable.add(() => {
+        descriptionModal.isVisible = false;
+    });
+    descriptionModal.addControl(closeButton);
+
+    infoButton.onPointerUpObservable.add(() => {
+        if (currentMood && moodData[currentMood]) {
+            modalText.text = moodData[currentMood].description;
+            descriptionModal.isVisible = true;
+        }
+    });
+
     const loader = new BABYLON.GUI.Rectangle();
     loader.background = "black";
     loader.color = "white";
@@ -359,49 +448,16 @@ const createScene = () => {
         fire.reset();
     };
 
-    const moodMessages = {
-        "Joie": [
-            "Joie : Les papillons virevoltent comme des éclats de rire sous le soleil !",
-            "Joie : Leur vol léger peint des sourires dans le ciel.",
-            "Joie : Chaque battement d’ailes répand une douce chaleur."
-        ],
-        "Peur": [
-            "Peur : Un cri déchire le silence de la nuit froide.",
-            "Peur : Des pas invisibles résonnent dans le brouillard.",
-            "Peur : Une silhouette floue guette depuis les ténèbres."
-        ],
-        "Colere": [
-            "Colère : Le feu crépite avec une violence sauvage !",
-            "Colère : Les braises dansent dans un tourbillon de haine.",
-            "Colère : La chaleur étouffante hurle sa révolte."
-        ],
-        "Triste": [
-            "Tristesse : La pluie chante une berceuse aux cœurs brisés.",
-            "Tristesse : Chaque goutte traîne un soupir dans la boue.",
-            "Tristesse : Le ciel pleure en silence sur un monde gris."
-        ]
-    };
-    const lastMessageIndex = { "Joie": -1, "Peur": -1, "Colere": -1, "Triste": -1 };
-    const getRandomMessage = (moodName) => {
-        const messages = moodMessages[moodName];
-        let newIndex;
-        do {
-            newIndex = Math.floor(Math.random() * messages.length);
-        } while (newIndex === lastMessageIndex[moodName] && messages.length > 1);
-        lastMessageIndex[moodName] = newIndex;
-        return messages[newIndex];
-    };
-
     let deadTree = null;
     let flowers = [];
 
     // Panneau d'intensité
     const intensityPanel = new BABYLON.GUI.StackPanel();
     intensityPanel.isVertical = true;
-    intensityPanel.width = "150px";
+    intensityPanel.width = "200px";
     intensityPanel.horizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_LEFT;
     intensityPanel.verticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_CENTER;
-    intensityPanel.isVisible = false; // Caché par défaut
+    intensityPanel.isVisible = false;
     advancedTexture.addControl(intensityPanel);
 
     const intensityLabel = new BABYLON.GUI.TextBlock();
@@ -413,12 +469,13 @@ const createScene = () => {
 
     const intensityButtons = [];
     for (let i = 1; i <= 3; i++) {
-        const button = BABYLON.GUI.Button.CreateSimpleButton(`intensity${i}`, `Niveau ${i}`);
-        button.width = "120px";
+        const button = BABYLON.GUI.Button.CreateSimpleButton(`intensity${i}`, "");
+        button.width = "180px";
         button.height = "40px";
         button.color = "white";
         button.background = i === currentIntensity ? "green" : "grey";
         button.paddingTop = "10px";
+        button.fontSize = 16;
         button.onPointerUpObservable.add(() => {
             currentIntensity = i;
             intensityButtons.forEach((btn, idx) => {
@@ -430,15 +487,25 @@ const createScene = () => {
         intensityButtons.push(button);
     }
 
+    // Met à jour les noms des boutons en fonction de l'humeur
+    const updateIntensityButtonNames = () => {
+        if (currentMood && moodData[currentMood]) {
+            intensityButtons.forEach((button, index) => {
+                button.children[0].text = moodData[currentMood].intensities[index].name;
+            });
+        }
+    };
+
     // Fonction pour mettre à jour les effets selon l'intensité
     const updateMoodEffects = () => {
         if (!currentMood) return;
 
+        const intensityDesc = moodData[currentMood].intensities[currentIntensity - 1].desc;
         switch (currentMood) {
             case "Joie":
                 butterflies.stop();
                 butterflies.emitRate = 50 * currentIntensity; // 50, 100, 150 papillons
-                butterflies.minEmitPower = 0.5 * currentIntensity; // Vitesse augmente
+                butterflies.minEmitPower = 0.5 * currentIntensity;
                 butterflies.maxEmitPower = 1 * currentIntensity;
                 butterflies.start();
                 break;
@@ -447,7 +514,7 @@ const createScene = () => {
                 if (currentIntensity >= 2) {
                     thunderSystem.startThunder();
                     if (currentIntensity === 3) {
-                        setTimeout(() => triggerScreamer(() => {}), 500); // Screamer à l'intensité max
+                        setTimeout(() => triggerScreamer(() => {}), 500);
                     }
                 }
                 break;
@@ -463,27 +530,29 @@ const createScene = () => {
             case "Triste":
                 rain.stop();
                 rain.emitRate = 2000 * currentIntensity; // 2000, 4000, 6000 gouttes
-                rain.minEmitPower = 5 * currentIntensity; // Vitesse augmente
+                rain.minEmitPower = 5 * currentIntensity;
                 rain.maxEmitPower = 10 * currentIntensity;
                 rain.start();
                 break;
         }
-        notification.text = `${getRandomMessage(currentMood)} (Intensité ${currentIntensity})`;
+        notification.text = intensityDesc; // Affiche uniquement la description courte
     };
 
     // Gestion des clics
     scene.onPointerObservable.add((pointerInfo) => {
         if (pointerInfo.type === BABYLON.PointerEventTypes.POINTERDOWN) {
             const pickResult = pointerInfo.pickInfo;
-            if (pickResult.hit && pickResult.pickedMesh && pickResult.pickedMesh.metadata && moodMessages[pickResult.pickedMesh.metadata.name]) {
+            if (pickResult.hit && pickResult.pickedMesh && pickResult.pickedMesh.metadata && moodData[pickResult.pickedMesh.metadata.name]) {
                 const mesh = pickResult.pickedMesh;
                 const newBackground = mesh.metadata.background;
                 const newGroundTexture = mesh.metadata.groundTexture;
 
                 currentMood = mesh.metadata.name;
-                currentIntensity = 1; // Réinitialise à faible intensité
+                currentIntensity = 1;
                 intensityButtons.forEach((btn, idx) => btn.background = idx === 0 ? "green" : "grey");
-                intensityPanel.isVisible = true; // Affiche les boutons
+                updateIntensityButtonNames();
+                intensityPanel.isVisible = true;
+                infoButton.isVisible = true; // Affiche le bouton "Info Émotion"
 
                 loader.isVisible = true;
                 butterflies.stop();
@@ -551,10 +620,10 @@ const createScene = () => {
                 currentDome.isPickable = false;
                 ground.material.diffuseTexture = new BABYLON.Texture(newGroundTexture, scene);
 
-                notification.text = getRandomMessage(currentMood);
+                notification.text = moodData[currentMood].intensities[0].desc;
                 setTimeout(() => {
                     loader.isVisible = false;
-                    updateMoodEffects(); // Applique l'intensité initiale
+                    updateMoodEffects();
                 }, 1000);
 
                 console.log(`Background changé pour : ${currentMood} (${newBackground})`);
