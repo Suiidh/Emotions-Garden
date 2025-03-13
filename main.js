@@ -284,8 +284,8 @@ const createScene = () => {
     const fire = new BABYLON.ParticleSystem("fire", 300, scene);
     fire.particleTexture = new BABYLON.Texture("/textures/fire.png", scene);
     fire.emitter = currentDome;
-    fire.minEmitBox = new BABYLON.Vector3(-200, 0, -200);
-    fire.maxEmitBox = new BABYLON.Vector3(200, -30, 200);
+    fire.minEmitBox = new BABYLON.Vector3(-190, 0, -170);
+    fire.maxEmitBox = new BABYLON.Vector3(200, -1, 200);
     fire.color1 = new BABYLON.Color4(1, 0.5, 0, 1);
     fire.color2 = new BABYLON.Color4(1, 0, 0, 1);
     fire.colorDead = new BABYLON.Color4(0.5, 0.2, 0, 0);
@@ -309,8 +309,8 @@ const createScene = () => {
             particle.position.y += particle.direction.y * this._scaledUpdateSpeed;
             particle.position.z += particle.direction.z * this._scaledUpdateSpeed;
             let distanceFromCenter = BABYLON.Vector3.Distance(particle.position, BABYLON.Vector3.Zero());
-            if (distanceFromCenter > 500) {
-                let normalizedPos = particle.position.normalize().scale(500);
+            if (distanceFromCenter > 175) {
+                let normalizedPos = particle.position.normalize().scale(175);
                 particle.position = normalizedPos;
             }
         }
