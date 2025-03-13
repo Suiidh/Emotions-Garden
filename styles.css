@@ -61,3 +61,61 @@ canvas {
 .intensity-button-3 {
     background-color: #e74c3c !important;
 }
+
+#welcome {
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+    height: 100%;
+    background-color: black;
+    color: #ffffff;
+    position: absolute;
+    width: 100%;
+    z-index: 10;
+  
+}
+
+#welcome p{
+    margin-bottom: 20px;
+    text-align: center;
+        }
+
+#startButton {
+    padding: 10px 30px;
+    font-size: 20px;
+    border-radius: 20px;
+    cursor: pointer;
+    outline: none;
+    color: #ffffff;
+    border: 1px solid #ffffff;
+    background-color: #000000;
+}
+
+.circle {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: inline-block;
+    margin: 10px;
+    margin-bottom: 20px;
+}
+.red { background-color: #FF4D4D; }
+.blue { background-color: #6633FF; }
+.green { background-color: #4D80FF; }
+.yellow { background-color: #FFD94D; }
+
+.circle-container {
+    display: flex;
+    margin-bottom: 20px;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    
+}
+.circle-container div{
+    margin: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;    
+}
