@@ -194,9 +194,10 @@ const createScene = () => {
     loadPineCones();
 
     // Sol
-    const ground = BABYLON.MeshBuilder.CreateDisc("ground", { radius: 200, tessellation: 64 }, scene);
+    const ground = BABYLON.MeshBuilder.CreateDisc("ground", { radius: 195, tessellation: 10 }, scene);
     ground.rotation.x = Math.PI / 2;
     ground.position.y = -0.1;
+    ground.rotation.y = Math.PI / 10; 
     ground.material = new BABYLON.StandardMaterial("groundMat", scene);
     ground.material.diffuseTexture = new BABYLON.Texture("/textures/grass.jpg", scene);
     ground.material.specularColor = new BABYLON.Color3(0.1, 0.1, 0.1);
@@ -228,12 +229,12 @@ const createScene = () => {
     });
 
     // Caméra
-    const camera = new BABYLON.ArcRotateCamera("cam", Math.PI / 2, Math.PI / 2, 280, new BABYLON.Vector3(0, 40, 0), scene);
+    const camera = new BABYLON.ArcRotateCamera("cam", Math.PI / 2, Math.PI / 2, 0, new BABYLON.Vector3(0, 30, 0), scene);
     camera.attachControl(canvas, true);
     camera.lowerRadiusLimit = 80;
     camera.upperRadiusLimit = 600;
     camera.lowerBetaLimit = 0.1;
-    camera.upperBetaLimit = Math.PI / 2;
+    camera.upperBetaLimit = Math.PI;
 
     // Lumière
     const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
