@@ -8,8 +8,9 @@ const createScene = () => {
     const scene = new BABYLON.Scene(engine);
     scene.clearColor = new BABYLON.Color4(0, 0, 0.1, 1);
 
-    // État actuel de l'humeur
+    // État actuel de l'humeur et intensité
     let currentMood = null;
+    let currentIntensity = 1; // 1 = faible, 2 = moyen, 3 = fort
 
     // Charger la serre
     BABYLON.SceneLoader.ImportMeshAsync("", "/objs/", "serre.glb", scene).then((result) => {
@@ -86,7 +87,7 @@ const createScene = () => {
             }).catch((error) => console.error("Erreur lors du chargement de tree3.glb :", error));
         }
     };
-    loadNormalTrees(); // Charger au démarrage
+    loadNormalTrees();
 
     // Horror tree
     let horrorTree = null;
@@ -210,11 +211,8 @@ const createScene = () => {
     rain.colorDead = new BABYLON.Color4(0, 0, 1, 0);
     rain.minSize = 1;
     rain.maxSize = 2;
-    rain.emitRate = 5000;
     rain.direction1 = new BABYLON.Vector3(0, -1, 0);
     rain.direction2 = new BABYLON.Vector3(0, -1, 0);
-    rain.minEmitPower = 5;
-    rain.maxEmitPower = 10;
     rain.gravity = new BABYLON.Vector3(0, -190.81, 0);
     rain.blendMode = BABYLON.ParticleSystem.BLENDMODE_STANDARD;
 
@@ -229,13 +227,8 @@ const createScene = () => {
     fire.colorDead = new BABYLON.Color4(0.5, 0.2, 0, 0);
     fire.minSize = 15;
     fire.maxSize = 20;
-    fire.emitRate = 800;
     fire.direction1 = new BABYLON.Vector3(-0.1, 1, -0.1);
     fire.direction2 = new BABYLON.Vector3(0.1, 1.5, 0.1);
-    fire.minEmitPower = 5;
-    fire.maxEmitPower = 10;
-    fire.minLifeTime = 2;
-    fire.maxLifeTime = 3;
     fire.gravity = new BABYLON.Vector3(0, 0, 0);
     fire.blendMode = BABYLON.ParticleSystem.BLENDMODE_ADD;
     fire.updateFunction = function(particles) {
@@ -303,11 +296,6 @@ const createScene = () => {
     butterflies.color2 = new BABYLON.Color4(1, 1, 0, 1);
     butterflies.minSize = 3;
     butterflies.maxSize = 5;
-    butterflies.emitRate = 100;
-    butterflies.direction1 = new BABYLON.Vector3(-1, 0, -1);
-    butterflies.direction2 = new BABYLON.Vector3(1, 1, 1);
-    butterflies.minEmitPower = 0.5;
-    butterflies.maxEmitPower = 1;
 
     // GUI
     const advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
@@ -338,10 +326,7 @@ const createScene = () => {
     loaderText.textVerticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_CENTER;
     loader.addControl(loaderText);
 
-    setTimeout(() => {
-        loader.isVisible = false;
-        console.log("Chargement terminé !");
-    }, 3000);
+    setTimeout(() => loader.isVisible = false, 3000);
 
     // Screamer
     const screamerModal = new BABYLON.GUI.Rectangle();
@@ -363,7 +348,6 @@ const createScene = () => {
     const triggerScreamer = (callback) => {
         screamerModal.isVisible = true;
         screamerSound.play();
-        console.log("Screamer modale affichée !");
         setTimeout(() => {
             screamerModal.isVisible = false;
             if (callback) callback();
@@ -411,6 +395,82 @@ const createScene = () => {
     let deadTree = null;
     let flowers = [];
 
+    // Panneau d'intensité
+    const intensityPanel = new BABYLON.GUI.StackPanel();
+    intensityPanel.isVertical = true;
+    intensityPanel.width = "150px";
+    intensityPanel.horizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_LEFT;
+    intensityPanel.verticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_CENTER;
+    intensityPanel.isVisible = false; // Caché par défaut
+    advancedTexture.addControl(intensityPanel);
+
+    const intensityLabel = new BABYLON.GUI.TextBlock();
+    intensityLabel.text = "Intensité";
+    intensityLabel.color = "white";
+    intensityLabel.fontSize = 20;
+    intensityLabel.height = "30px";
+    intensityPanel.addControl(intensityLabel);
+
+    const intensityButtons = [];
+    for (let i = 1; i <= 3; i++) {
+        const button = BABYLON.GUI.Button.CreateSimpleButton(`intensity${i}`, `Niveau ${i}`);
+        button.width = "120px";
+        button.height = "40px";
+        button.color = "white";
+        button.background = i === currentIntensity ? "green" : "grey";
+        button.paddingTop = "10px";
+        button.onPointerUpObservable.add(() => {
+            currentIntensity = i;
+            intensityButtons.forEach((btn, idx) => {
+                btn.background = (idx + 1 === i) ? "green" : "grey";
+            });
+            updateMoodEffects();
+        });
+        intensityPanel.addControl(button);
+        intensityButtons.push(button);
+    }
+
+    // Fonction pour mettre à jour les effets selon l'intensité
+    const updateMoodEffects = () => {
+        if (!currentMood) return;
+
+        switch (currentMood) {
+            case "Joie":
+                butterflies.stop();
+                butterflies.emitRate = 50 * currentIntensity; // 50, 100, 150 papillons
+                butterflies.minEmitPower = 0.5 * currentIntensity; // Vitesse augmente
+                butterflies.maxEmitPower = 1 * currentIntensity;
+                butterflies.start();
+                break;
+            case "Peur":
+                thunderSystem.stopThunder();
+                if (currentIntensity >= 2) {
+                    thunderSystem.startThunder();
+                    if (currentIntensity === 3) {
+                        setTimeout(() => triggerScreamer(() => {}), 500); // Screamer à l'intensité max
+                    }
+                }
+                break;
+            case "Colere":
+                stopFireInstantly();
+                fire.emitRate = 400 * currentIntensity; // 400, 800, 1200 particules de feu
+                fire.minEmitPower = 5 * currentIntensity;
+                fire.maxEmitPower = 10 * currentIntensity;
+                fire.start();
+                thunderSystem.stopThunder();
+                if (currentIntensity >= 2) thunderSystem.startThunder();
+                break;
+            case "Triste":
+                rain.stop();
+                rain.emitRate = 2000 * currentIntensity; // 2000, 4000, 6000 gouttes
+                rain.minEmitPower = 5 * currentIntensity; // Vitesse augmente
+                rain.maxEmitPower = 10 * currentIntensity;
+                rain.start();
+                break;
+        }
+        notification.text = `${getRandomMessage(currentMood)} (Intensité ${currentIntensity})`;
+    };
+
     // Gestion des clics
     scene.onPointerObservable.add((pointerInfo) => {
         if (pointerInfo.type === BABYLON.PointerEventTypes.POINTERDOWN) {
@@ -420,10 +480,11 @@ const createScene = () => {
                 const newBackground = mesh.metadata.background;
                 const newGroundTexture = mesh.metadata.groundTexture;
 
-                // Mettre à jour l'état actuel
                 currentMood = mesh.metadata.name;
+                currentIntensity = 1; // Réinitialise à faible intensité
+                intensityButtons.forEach((btn, idx) => btn.background = idx === 0 ? "green" : "grey");
+                intensityPanel.isVisible = true; // Affiche les boutons
 
-                // Arrêter tous les effets
                 loader.isVisible = true;
                 butterflies.stop();
                 rain.stop();
@@ -431,7 +492,6 @@ const createScene = () => {
                 thunderSystem.stopThunder();
                 screamerModal.isVisible = false;
 
-                // Nettoyage des objets existants
                 if (tree1) { tree1.dispose(); tree1 = null; }
                 if (tree2) { tree2.dispose(); tree2 = null; }
                 if (tree3) { tree3.dispose(); tree3 = null; }
@@ -445,7 +505,6 @@ const createScene = () => {
                 if (deadTree) { deadTree.dispose(); deadTree = null; }
                 flowers.forEach(flower => { if (flower) flower.dispose(); }); flowers = [];
 
-                // Gestion des éléments pour chaque humeur
                 switch (currentMood) {
                     case "Joie":
                         loadNormalTrees();
@@ -467,12 +526,10 @@ const createScene = () => {
                                 flowers[index] = flower;
                             }).catch((error) => console.error(`Erreur lors du chargement de ${file} :`, error));
                         });
-                        butterflies.start();
                         break;
                     case "Peur":
                         loadBench();
                         loadHorrorTree();
-                        triggerScreamer(() => thunderSystem.startThunder());
                         break;
                     case "Colere":
                         BABYLON.SceneLoader.ImportMeshAsync("", "/objs/", "dead-tree.glb", scene).then((result) => {
@@ -481,29 +538,24 @@ const createScene = () => {
                             deadTree.scaling = new BABYLON.Vector3(4, 4, 4);
                             deadTree.isPickable = false;
                         }).catch((error) => console.error("Erreur lors du chargement de dead-tree.glb :", error));
-                        fire.emitter = currentDome;
-                        fire.start();
-                        thunderSystem.startThunder();
                         break;
                     case "Triste":
                         loadNormalTrees();
                         loadBench();
                         loadPineCones();
-                        rain.start();
                         break;
                 }
 
-                // Mise à jour du dôme et du sol
                 if (currentDome) currentDome.dispose();
                 currentDome = new BABYLON.PhotoDome("starDome", newBackground, { resolution: 32, size: 1000 }, scene);
                 currentDome.isPickable = false;
                 ground.material.diffuseTexture = new BABYLON.Texture(newGroundTexture, scene);
 
-                // Notification
                 notification.text = getRandomMessage(currentMood);
-
-                // Fin du chargement
-                setTimeout(() => loader.isVisible = false, 1000);
+                setTimeout(() => {
+                    loader.isVisible = false;
+                    updateMoodEffects(); // Applique l'intensité initiale
+                }, 1000);
 
                 console.log(`Background changé pour : ${currentMood} (${newBackground})`);
             }
