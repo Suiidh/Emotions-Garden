@@ -4,6 +4,9 @@ if (!canvas) {
 }
 const engine = new BABYLON.Engine(canvas, true);
 
+// Déclarer les variables GUI dans une portée globale
+let infoButton, descriptionModal, closeButton, intensityPanel, intensityButtons;
+
 const createScene = () => {
     const scene = new BABYLON.Scene(engine);
     scene.clearColor = new BABYLON.Color4(0, 0, 0.1, 1);
@@ -205,10 +208,10 @@ const createScene = () => {
 
     // Humeurs
     const moods = [
-        { name: "Joie", sphere: null, position: new BABYLON.Vector3(-80, 5, 0), color: new BABYLON.Color3(1, 0.8, 0), background: "/textures/background-joie.jpg", groundTexture: "/textures/grass.jpg" },
-        { name: "Peur", sphere: null, position: new BABYLON.Vector3(0, 4, 0), color: new BABYLON.Color3(0.4, 0.1, 1), background: "/textures/background2.jpg", groundTexture: "/textures/dark_forest.jpg" },
-        { name: "Colere", sphere: null, position: new BABYLON.Vector3(80, 4, 0), color: new BABYLON.Color3(1, 0, 0), background: "/textures/background-colere.jpg", groundTexture: "/textures/lava.jpg" },
-        { name: "Triste", sphere: null, position: new BABYLON.Vector3(0, 4, 80), color: new BABYLON.Color3(0, 0.5, 1), background: "/textures/background-triste.jpg", groundTexture: "/textures/grass.jpg" }
+        { name: "Joie", sphere: null, position: new BABYLON.Vector3(-80, 5, 0), color: new BABYLON.Color3(1, 0.85, 0.3), background: "/textures/background-joie.jpg", groundTexture: "/textures/grass.jpg" },
+        { name: "Peur", sphere: null, position: new BABYLON.Vector3(0, 4, 0), color: new BABYLON.Color3(0.4, 0.2, 1), background: "/textures/background2.jpg", groundTexture: "/textures/dark_forest.jpg" },
+        { name: "Colere", sphere: null, position: new BABYLON.Vector3(80, 4, 0), color: new BABYLON.Color3(1, 0.3, 0.3), background: "/textures/background-colere.jpg", groundTexture: "/textures/lava.jpg" },
+        { name: "Triste", sphere: null, position: new BABYLON.Vector3(0, 4, 80), color: new BABYLON.Color3(0.3, 0.5, 1), background: "/textures/background-triste.jpg", groundTexture: "/textures/grass.jpg" }
     ];
 
     const glowLayer = new BABYLON.GlowLayer("glow", scene);
@@ -335,7 +338,8 @@ const createScene = () => {
 
     // GUI
     const advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
-    const notification = new BABYLON.GUI.TextBlock();
+
+    const notification = new BABYLON.GUI.TextBlock("notification");
     notification.text = "";
     notification.color = "white";
     notification.background = "black";
@@ -346,47 +350,52 @@ const createScene = () => {
     notification.paddingRight = "20px";
     advancedTexture.addControl(notification);
 
-    // Bouton pour afficher la description
-    const infoButton = BABYLON.GUI.Button.CreateSimpleButton("infoButton", "Info Émotion");
-    infoButton.width = "120px";
-    infoButton.height = "40px";
-    infoButton.color = "white";
-    infoButton.background = "grey";
+    infoButton = BABYLON.GUI.Button.CreateImageOnlyButton("infoButton", "/textures/info-icon.png");
+    infoButton.width = "50px";
+    infoButton.background = "white";
+    infoButton.height = "30px";
     infoButton.horizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_RIGHT;
     infoButton.verticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_TOP;
-    infoButton.top = "60px"; // Sous la notification
+    infoButton.top = "60px";
     infoButton.paddingRight = "20px";
-    infoButton.isVisible = false; // Caché par défaut
+    infoButton.isVisible = false;
+    infoButton.cornerRadius = 20;
+    infoButton.metadata = { className: "info-button" };
     advancedTexture.addControl(infoButton);
 
-    // Modale pour la description
-    const descriptionModal = new BABYLON.GUI.Rectangle();
+    descriptionModal = new BABYLON.GUI.Rectangle("descriptionModal");
     descriptionModal.width = "500px";
     descriptionModal.height = "400px";
-    descriptionModal.background = "rgba(0, 0, 0, 0.9)";
-    descriptionModal.color = "white";
+    descriptionModal.background = "rgb(0, 0, 0)";
+    descriptionModal.color = "grey";
     descriptionModal.thickness = 2;
+    descriptionModal.cornerRadius = 20;
     descriptionModal.isVisible = false;
+    descriptionModal.metadata = { className: "description-modal" };
     advancedTexture.addControl(descriptionModal);
 
-    const modalText = new BABYLON.GUI.TextBlock();
+    const modalText = new BABYLON.GUI.TextBlock("modalText");
     modalText.text = "";
     modalText.color = "white";
     modalText.fontSize = 18;
     modalText.textWrapping = true;
     modalText.paddingLeft = "20px";
+    modalText.paddingTop = "20px";
     modalText.paddingRight = "20px";
+    modalText.cornerRadius = 20;
     modalText.textHorizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_LEFT;
     modalText.textVerticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_TOP;
     descriptionModal.addControl(modalText);
 
-    const closeButton = BABYLON.GUI.Button.CreateSimpleButton("closeButton", "Fermer");
+    closeButton = BABYLON.GUI.Button.CreateSimpleButton("closeButton", "Fermer");
     closeButton.width = "100px";
     closeButton.height = "40px";
     closeButton.color = "white";
-    closeButton.background = "grey";
+    closeButton.background = "black";
     closeButton.verticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_BOTTOM;
     closeButton.top = "-20px";
+    closeButton.cornerRadius = 20;
+    closeButton.metadata = { className: "close-button" };
     closeButton.onPointerUpObservable.add(() => {
         descriptionModal.isVisible = false;
     });
@@ -399,7 +408,7 @@ const createScene = () => {
         }
     });
 
-    const loader = new BABYLON.GUI.Rectangle();
+    const loader = new BABYLON.GUI.Rectangle("loader");
     loader.background = "black";
     loader.color = "white";
     loader.alpha = 0.9;
@@ -407,7 +416,7 @@ const createScene = () => {
     loader.isVisible = true;
     advancedTexture.addControl(loader);
 
-    const loaderText = new BABYLON.GUI.TextBlock();
+    const loaderText = new BABYLON.GUI.TextBlock("loaderText");
     loaderText.text = "Chargement...";
     loaderText.color = "white";
     loaderText.fontSize = 30;
@@ -417,8 +426,7 @@ const createScene = () => {
 
     setTimeout(() => loader.isVisible = false, 3000);
 
-    // Screamer
-    const screamerModal = new BABYLON.GUI.Rectangle();
+    const screamerModal = new BABYLON.GUI.Rectangle("screamerModal");
     screamerModal.width = 1.0;
     screamerModal.height = 1.0;
     screamerModal.thickness = 0;
@@ -451,35 +459,39 @@ const createScene = () => {
     let deadTree = null;
     let flowers = [];
 
-    // Panneau d'intensité
-    const intensityPanel = new BABYLON.GUI.StackPanel();
+    intensityPanel = new BABYLON.GUI.StackPanel("intensityPanel");
     intensityPanel.isVertical = true;
     intensityPanel.width = "200px";
+    intensityPanel.paddingLeft = "20px";
+    intensityPanel.paddingTop = "-10px";
     intensityPanel.horizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_LEFT;
-    intensityPanel.verticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_CENTER;
+    intensityPanel.verticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_TOP;
     intensityPanel.isVisible = false;
+    intensityPanel.metadata = { className: "intensity-panel" };
     advancedTexture.addControl(intensityPanel);
 
-    const intensityLabel = new BABYLON.GUI.TextBlock();
-    intensityLabel.text = "Intensité";
+    const intensityLabel = new BABYLON.GUI.TextBlock("intensityLabel");
     intensityLabel.color = "white";
     intensityLabel.fontSize = 20;
+    intensityLabel.cornerRadius = 20;
     intensityLabel.height = "30px";
     intensityPanel.addControl(intensityLabel);
 
-    const intensityButtons = [];
+    intensityButtons = [];
     for (let i = 1; i <= 3; i++) {
         const button = BABYLON.GUI.Button.CreateSimpleButton(`intensity${i}`, "");
-        button.width = "180px";
+        button.metadata = { className: `intensity-button intensity-button-${i}` };
         button.height = "40px";
         button.color = "white";
-        button.background = i === currentIntensity ? "green" : "grey";
+        button.cornerRadius = 20;
+        button.background = i === currentIntensity ? "black" : "grey";
         button.paddingTop = "10px";
         button.fontSize = 16;
+        button.metadata = { className: `intensity-button intensity-button-${i}` };
         button.onPointerUpObservable.add(() => {
             currentIntensity = i;
             intensityButtons.forEach((btn, idx) => {
-                btn.background = (idx + 1 === i) ? "green" : "grey";
+                btn.background = (idx + 1 === i) ? moods.find(mood => mood.name === currentMood).color.toHexString() : "grey";
             });
             updateMoodEffects();
         });
@@ -501,10 +513,11 @@ const createScene = () => {
         if (!currentMood) return;
 
         const intensityDesc = moodData[currentMood].intensities[currentIntensity - 1].desc;
+        updateButtonColors();
         switch (currentMood) {
             case "Joie":
                 butterflies.stop();
-                butterflies.emitRate = 50 * currentIntensity; // 50, 100, 150 papillons
+                butterflies.emitRate = 50 * currentIntensity;
                 butterflies.minEmitPower = 0.5 * currentIntensity;
                 butterflies.maxEmitPower = 1 * currentIntensity;
                 butterflies.start();
@@ -520,7 +533,7 @@ const createScene = () => {
                 break;
             case "Colere":
                 stopFireInstantly();
-                fire.emitRate = 400 * currentIntensity; // 400, 800, 1200 particules de feu
+                fire.emitRate = 400 * currentIntensity;
                 fire.minEmitPower = 5 * currentIntensity;
                 fire.maxEmitPower = 10 * currentIntensity;
                 fire.start();
@@ -529,13 +542,34 @@ const createScene = () => {
                 break;
             case "Triste":
                 rain.stop();
-                rain.emitRate = 2000 * currentIntensity; // 2000, 4000, 6000 gouttes
+                rain.emitRate = 2000 * currentIntensity;
                 rain.minEmitPower = 5 * currentIntensity;
                 rain.maxEmitPower = 10 * currentIntensity;
                 rain.start();
                 break;
         }
-        notification.text = intensityDesc; // Affiche uniquement la description courte
+        notification.text = intensityDesc;
+    };
+
+    const updateButtonColors = () => {
+        if (currentMood && moodData[currentMood]) {
+            const moodColor = moods.find(mood => mood.name === currentMood).color;
+            intensityButtons.forEach(button => {
+                button.background = button.metadata.className.includes(`intensity-button-${currentIntensity}`) ? moodColor.toHexString() : "black";
+                button.onPointerEnterObservable.add(() => {
+                    button.background = moodColor.toHexString();
+                });
+                button.onPointerOutObservable.add(() => {
+                    button.background = button.metadata.className.includes(`intensity-button-${currentIntensity}`) ? moodColor.toHexString() : "black";
+                });
+                button.onPointerDownObservable.add(() => {
+                    button.background = moodColor.toHexString();
+                });
+                button.onPointerUpObservable.add(() => {
+                    button.background = button.metadata.className.includes(`intensity-button-${currentIntensity}`) ? moodColor.toHexString() : "black";
+                });
+            });
+        }
     };
 
     // Gestion des clics
@@ -549,10 +583,10 @@ const createScene = () => {
 
                 currentMood = mesh.metadata.name;
                 currentIntensity = 1;
-                intensityButtons.forEach((btn, idx) => btn.background = idx === 0 ? "green" : "grey");
+            
                 updateIntensityButtonNames();
                 intensityPanel.isVisible = true;
-                infoButton.isVisible = true; // Affiche le bouton "Info Émotion"
+                infoButton.isVisible = true;
 
                 loader.isVisible = true;
                 butterflies.stop();
@@ -627,6 +661,7 @@ const createScene = () => {
                 }, 1000);
 
                 console.log(`Background changé pour : ${currentMood} (${newBackground})`);
+                updateButtonColors();
             }
         }
     });

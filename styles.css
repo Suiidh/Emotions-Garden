@@ -8,9 +8,56 @@ body {
     font-family: "Gill Sans", sans-serif;
 }
 
-canvas{
+canvas {
     width: 100vw;
     height: 100vh;
     outline: none;
     -webkit-tap-highlight-color: rgba(255, 255, 255, 0); /* mobile webkit */
+}
+
+.info-button {
+    background-color: #3498db !important;
+    border-radius: 5px;
+}
+.info-button:hover {
+    background-color: #2980b9 !important;
+}
+
+.description-modal {
+    background-color: rgba(20, 20, 20, 0.95) !important;
+    border: 2px solid #ecf0f1 !important;
+    border-radius: 10px;
+}
+
+.close-button {
+    background-color: #e74c3c !important;
+    border-radius: 5px;
+}
+.close-button:hover {
+    background-color: #c0392b !important;
+}
+
+.intensity-panel {
+    background-color: rgba(0, 0, 0, 0.8) !important;
+    padding: 10px;
+    border-radius: 8px;
+}
+
+.intensity-button {
+    border: 1px solid #fff !important;
+    border-radius: 4px;
+    margin-bottom: 5px;
+    transition: background-color 0.3s;
+}
+
+.intensity-button-1 {
+    background-color: #2ecc71 !important; 
+}
+
+.intensity-button-2 {
+    background-color: #f1c40f !important; 
+}
+
+.intensity-button-3 {
+    background-color: #e74c3c !important;
 }
