@@ -1,11 +1,10 @@
-
 <!doctype html>
 <html>
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <link rel="shortcut icon" href="../babylonjs.ico" />
-
-    <title>Humeur</title>
+    <link rel="icon" type="image/ico" href="favicon.ico" />
+    <title>Le Jardin des Émotions</title>
     <script src="https://cdn.babylonjs.com/babylon.js"></script>
     <script src="https://cdn.babylonjs.com/materialsLibrary/babylonjs.materials.min.js"></script>
     <script src="https://cdn.babylonjs.com/proceduralTexturesLibrary/babylonjs.proceduralTextures.min.js"></script>
@@ -16,12 +15,42 @@
     <script src="https://cdn.babylonjs.com/addons/babylonjs.addons.min.js"></script>
     <script src="https://cdn.babylonjs.com/inspector/babylon.inspector.bundle.js"></script>
     <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
+    <script src="https://cdn.babylonjs.com/earcut.min.js"></script>
+
     <link rel="stylesheet" href="styles.css" />
 
 </head>
 <body>
-
+<div id="welcome">
+    <h1>Le Jardin des Émotions</h1>
+    <p>Un jeu pour apprendre à reconnaître et exprimer ses émotions <br/><br/> Clique sur les differentes spheres dans le jardin pour découvrir les émotions cachées à l'intérieur.</p>
+    <div class="circle-container">
+        <div>
+            <div class="circle red"></div>
+            <span class="circle-title">Colère</span>
+        </div>
+        <div>
+            <div class="circle blue"></div>
+            <span class="circle-title">Peur</span>
+        </div>
+        <div>
+            <div class="circle yellow"></div>
+            <span class="circle-title">Joie</span>
+        </div>
+        <div>
+            <div class="circle green"></div>
+            <span class="circle-title">Triste</span>
+        </div>
+    </div>
+    <button id="startButton">Start</button>
+</div>
 <canvas id="renderCanvas"></canvas>
+<script>
+    document.getElementById('startButton').onclick = function() {
+        document.getElementById('welcome').style.display = 'none';
+        document.getElementById('renderCanvas').style.display = 'block';
+    };
+</script>
 <script src="main.js"></script>
 </body>
 </html>

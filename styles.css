@@ -8,9 +8,114 @@ body {
     font-family: "Gill Sans", sans-serif;
 }
 
-canvas{
+canvas {
     width: 100vw;
     height: 100vh;
     outline: none;
     -webkit-tap-highlight-color: rgba(255, 255, 255, 0); /* mobile webkit */
+}
+
+.info-button {
+    background-color: #3498db !important;
+    border-radius: 5px;
+}
+.info-button:hover {
+    background-color: #2980b9 !important;
+}
+
+.description-modal {
+    background-color: rgba(20, 20, 20, 0.95) !important;
+    border: 2px solid #ecf0f1 !important;
+    border-radius: 10px;
+}
+
+.close-button {
+    background-color: #e74c3c !important;
+    border-radius: 5px;
+}
+.close-button:hover {
+    background-color: #c0392b !important;
+}
+
+.intensity-panel {
+    background-color: rgba(0, 0, 0, 0.8) !important;
+    padding: 10px;
+    border-radius: 8px;
+}
+
+.intensity-button {
+    border: 1px solid #fff !important;
+    border-radius: 4px;
+    margin-bottom: 5px;
+    transition: background-color 0.3s;
+}
+
+.intensity-button-1 {
+    background-color: #2ecc71 !important; 
+}
+
+.intensity-button-2 {
+    background-color: #f1c40f !important; 
+}
+
+.intensity-button-3 {
+    background-color: #e74c3c !important;
+}
+
+#welcome {
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+    height: 100%;
+    background-color: black;
+    color: #ffffff;
+    position: absolute;
+    width: 100%;
+    z-index: 10;
+  
+}
+
+#welcome p{
+    margin-bottom: 20px;
+    text-align: center;
+        }
+
+#startButton {
+    padding: 10px 30px;
+    font-size: 20px;
+    border-radius: 20px;
+    cursor: pointer;
+    outline: none;
+    color: #ffffff;
+    border: 1px solid #ffffff;
+    background-color: #000000;
+}
+
+.circle {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: inline-block;
+    margin: 10px;
+    margin-bottom: 20px;
+}
+.red { background-color: #FF4D4D; }
+.blue { background-color: #6633FF; }
+.green { background-color: #4D80FF; }
+.yellow { background-color: #FFD94D; }
+
+.circle-container {
+    display: flex;
+    margin-bottom: 20px;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    
+}
+.circle-container div{
+    margin: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;    
 }
