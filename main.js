@@ -253,14 +253,14 @@ const createScene = () => {
 
     // Humeurs
     const moods = [
-        { name: "Joie", sphere: null, position: new BABYLON.Vector3(-80, 5, 0), color: new BABYLON.Color3(1, 0.85, 0.3), background: "/textures/background-joie.jpg", groundTexture: "/textures/grass.jpg" },
-        { name: "Peur", sphere: null, position: new BABYLON.Vector3(0, 4, 0), color: new BABYLON.Color3(0.4, 0.2, 1), background: "/textures/background2.jpg", groundTexture: "/textures/dark_forest.jpg" },
+        { name: "Joie", sphere: null, position: new BABYLON.Vector3(-150, 5, 0), color: new BABYLON.Color3(1, 0.85, 0.3), background: "/textures/background-joie.jpg", groundTexture: "/textures/grass.jpg" },
+        { name: "Peur", sphere: null, position: new BABYLON.Vector3(0, 4, -110), color: new BABYLON.Color3(0.4, 0.2, 1), background: "/textures/background2.jpg", groundTexture: "/textures/dark_forest.jpg" },
         { name: "Colere", sphere: null, position: new BABYLON.Vector3(80, 4, 0), color: new BABYLON.Color3(1, 0.3, 0.3), background: "/textures/background-colere.jpg", groundTexture: "/textures/lava.jpg" },
-        { name: "Triste", sphere: null, position: new BABYLON.Vector3(0, 4, 80), color: new BABYLON.Color3(0.3, 0.5, 1), background: "/textures/background-triste.jpg", groundTexture: "/textures/grass.jpg" }
+        { name: "Triste", sphere: null, position: new BABYLON.Vector3(0, 4, 110), color: new BABYLON.Color3(0.3, 0.5, 1), background: "/textures/background-triste.jpg", groundTexture: "/textures/grass.jpg" }
     ];
 
     const glowLayer = new BABYLON.GlowLayer("glow", scene);
-    glowLayer.intensity = 0.8;
+    glowLayer.intensity = 0.1;
     moods.forEach((mood) => {
         const sphere = BABYLON.MeshBuilder.CreateSphere(mood.name, { diameter: 8 }, scene);
         sphere.position = mood.position;
