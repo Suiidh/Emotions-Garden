@@ -1,0 +1,94 @@
+# README - Projet d'Exploration des Émotions en 3D
+
+## Description
+Ce projet est une expérience interactive en 3D utilisant Babylon.js pour explorer quatre émotions principales : Joie, Tristesse, Peur et Colère. Chaque émotion est représentée par une sphère dans une serre virtuelle, et des interactions permettent de modifier l’environnement et les effets visuels selon l’intensité choisie.
+
+## Contenu de l’archive ZIP
+Pour exécuter ce projet, décompressez l’archive ZIP qui contient les fichiers suivants :
+
+### Structure des dossiers
+- **index.html** : Fichier principal à ouvrir dans un navigateur pour lancer le projet.
+- **main.js** : Script JavaScript contenant toute la logique du projet.
+- **/objs/** : Dossier contenant les modèles 3D au format .glb :
+  - serre.glb (la serre centrale)
+  - tree1.glb, tree2.glb, tree3.glb (arbres normaux)
+  - horror_tree.glb (arbre effrayant pour la Peur)
+  - tombstone1.glb, tombstone2.glb (tombes pour la Peur)
+  - bench.glb (banc)
+  - pine_cone.glb (pomme de pin)
+  - flower1.glb, flower2.glb, flower3.glb, flower4.glb (fleurs pour la Joie)
+  - dead-tree.glb (arbre mort pour la Colère)
+- **/textures/** : Dossier contenant les textures et images :
+  - background.jpg (fond étoilé par défaut)
+  - background-joie.jpg, background-triste.jpg, background2.jpg (pour Peur), background-colere.jpg (fonds spécifiques aux émotions)
+  - grass.jpg, dark_forest.jpg, lava.jpg (textures du sol)
+  - water-drop.png (particules de pluie)
+  - fire.png (particules de feu)
+  - butterfly.png (particules de papillons)
+  - screamer.png (image pour le screamer de la Peur)
+  - info-icon.png (icône pour le bouton "Info")
+
+## Dépendances externes
+Le projet utilise Babylon.js et Babylon.GUI, chargés via CDN dans **index.html**. Une connexion Internet est donc requise pour que ces bibliothèques soient téléchargées.
+
+## Instructions d’installation et d’exécution
+1. Décompressez l’archive ZIP dans un dossier local.
+2. Assurez-vous que les dossiers **/objs/** et **/textures/** sont bien placés à la racine, aux côtés de **index.html** et **main.js**.
+3. Ouvrez un terminal dans le dossier du projet et lancez un serveur local avec la commande suivante :
+   ```sh
+   npx http-server .
+   ```
+4. Ouvrez un navigateur web et accédez à **http://localhost:8080**.
+5. Le projet se chargera automatiquement. Attendez que l’écran de chargement disparaisse pour commencer à interagir.
+
+## Interactions disponibles
+
+### Navigation
+- **Caméra** : Utilisez la souris pour tourner autour de la scène (clic gauche + déplacement), zoomer (molette) ou déplacer la vue (clic droit + déplacement). La caméra est limitée pour éviter de passer sous le sol ou de trop s’éloigner.
+
+### Sélection des émotions
+- **Sphères d’émotion** : Quatre sphères colorées représentent les émotions :
+  - Joie (jaune clair, à gauche)
+  - Peur (violet, au centre)
+  - Colère (rouge, à droite)
+  - Tristesse (bleu, devant)
+- **Interaction** : Cliquez sur une sphère pour sélectionner une émotion. Cela change le fond, la texture du sol, les objets présents et active des effets visuels spécifiques.
+
+### Panneau d’intensité
+- **Boutons d’intensité** : Une fois une émotion sélectionnée, un panneau apparaît à gauche avec trois boutons :
+  - Intensité 1 : Faible (ex. "Légère satisfaction" pour Joie).
+  - Intensité 2 : Moyenne (ex. "Bonheur modéré" pour Joie).
+  - Intensité 3 : Forte (ex. "Euphorie" pour Joie).
+
+### Effets par émotion
+- **Joie** : Fond lumineux, sol herbeux, papillons volants.
+- **Tristesse** : Fond sombre, pluie tombante.
+- **Peur** : Fond brumeux, arbre effrayant, tombes.
+- **Colère** : Fond volcanique, sol de lave, particules de feu.
+
+## Éléments nécessaires pour explorer le projet
+- **Navigateur récent** : Chrome, Firefox ou Edge (testé avec succès).
+- **Connexion Internet** : Pour charger Babylon.js via CDN.
+- **Serveur local** : Nécessaire pour éviter les erreurs CORS lors du chargement des fichiers locaux.
+- **Carte graphique compatible WebGL** : Pour un rendu fluide des effets 3D.
+
+## Difficultés rencontrées
+- **Gestion des chargements** :
+  - Solution : Implémentation d’un système de suivi du chargement.
+- **Synchronisation des animations** :
+  - Solution : Arrêt explicite de toutes les animations avant chaque changement.
+- **Optimisation des particules** :
+  - Solution : Ajustement des taux d’émission et limitation des particules actives.
+- **Compatibilité audio** :
+  - Solution : Ajout de délais aléatoires pour éviter les chevauchements.
+
+## Points les plus chronophages
+- **Création des effets d’intensité** : Animation et équilibrage des effets visuels.
+- **Gestion des objets dynamiques** : Chargement et suppression propre des modèles 3D.
+- **Interface utilisateur** : Ajustement de la GUI pour une expérience fluide.
+
+## Remarque
+Testez chaque émotion à toutes les intensités pour voir la progression des effets. Si des éléments ne se chargent pas, vérifiez les chemins dans **/objs/** et **/textures/** ou relancez le serveur.
+
+Merci d’explorer ce projet ! N’hésitez pas à signaler tout problème ou à suggérer des améliorations.
+
