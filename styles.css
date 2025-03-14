@@ -119,3 +119,16 @@ canvas {
     justify-content: center;
     align-items: center;    
 }
+
+#restartButton {
+    padding: 5px 25px;
+    font-size: 15px;
+    border-radius: 20px;
+    cursor: pointer;
+    outline: none;
+    color: #ffffff;
+    border: 1px solid #ffffff;
+    background-color: #000000;
+
+    display:none; position:absolute; bottom:10px; left:10px;
+}

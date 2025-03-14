@@ -14,7 +14,6 @@
     <script src="https://cdn.babylonjs.com/gui/babylon.gui.min.js"></script>
     <script src="https://cdn.babylonjs.com/addons/babylonjs.addons.min.js"></script>
     <script src="https://cdn.babylonjs.com/inspector/babylon.inspector.bundle.js"></script>
-    <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
     <script src="https://cdn.babylonjs.com/earcut.min.js"></script>
 
     <link rel="stylesheet" href="styles.css" />
@@ -49,8 +48,16 @@
     document.getElementById('startButton').onclick = function() {
         document.getElementById('welcome').style.display = 'none';
         document.getElementById('renderCanvas').style.display = 'block';
+        document.getElementById('restartButton').style.display = 'block';
+    };
+
+    window.onload = function() {
+        document.getElementById('restartButton').onclick = function() {
+            location.reload();
+        };
     };
 </script>
+<button id="restartButton" >Home</button>
 <script src="main.js"></script>
 </body>
 </html>

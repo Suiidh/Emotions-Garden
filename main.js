@@ -528,7 +528,7 @@ const createScene = () => {
     notification.text = "";
     notification.color = "white";
     notification.background = "black";
-    notification.fontSize = 20;
+    notification.fontSize = 15;
     notification.textHorizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_RIGHT;
     notification.textVerticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_TOP;
     notification.paddingTop = "20px";
@@ -545,6 +545,7 @@ const createScene = () => {
     infoButton.paddingRight = "20px";
     infoButton.isVisible = false;
     infoButton.cornerRadius = 20;
+    infoButton.thickness = 0;
     infoButton.metadata = { className: "info-button" };
     advancedTexture.addControl(infoButton);
 
@@ -644,13 +645,13 @@ const createScene = () => {
         button.height = "40px";
         button.color = "white";
         button.cornerRadius = 20;
-        button.background = i === currentIntensity ? "black" : "grey";
+        button.background = i === currentIntensity ? "black" : "black";
         button.paddingTop = "10px";
-        button.fontSize = 16;
+        button.fontSize = 13;
         button.onPointerUpObservable.add(() => {
             currentIntensity = i;
             intensityButtons.forEach((btn, idx) => {
-                btn.background = (idx + 1 === i) ? moods.find(mood => mood.name === currentMood).color.toHexString() : "grey";
+                btn.background = (idx + 1 === i) ? moods.find(mood => mood.name === currentMood).color.toHexString() : "black";
             });
             updateMoodEffects();
         });
@@ -896,18 +897,18 @@ const createScene = () => {
         if (currentMood && moodData[currentMood]) {
             const moodColor = moods.find(mood => mood.name === currentMood).color;
             intensityButtons.forEach(button => {
-                button.background = button.metadata.className.includes(`intensity-button-${currentIntensity}`) ? moodColor.toHexString() : "grey";
+                button.background = button.metadata.className.includes(`intensity-button-${currentIntensity}`) ? moodColor.toHexString() : "black";
                 button.onPointerEnterObservable.add(() => {
                     button.background = moodColor.toHexString();
                 });
                 button.onPointerOutObservable.add(() => {
-                    button.background = button.metadata.className.includes(`intensity-button-${currentIntensity}`) ? moodColor.toHexString() : "grey";
+                    button.background = button.metadata.className.includes(`intensity-button-${currentIntensity}`) ? moodColor.toHexString() : "black";
                 });
                 button.onPointerDownObservable.add(() => {
                     button.background = moodColor.toHexString();
                 });
                 button.onPointerUpObservable.add(() => {
-                    button.background = button.metadata.className.includes(`intensity-button-${currentIntensity}`) ? moodColor.toHexString() : "grey";
+                    button.background = button.metadata.className.includes(`intensity-button-${currentIntensity}`) ? moodColor.toHexString() : "black";
                 });
             });
         }
