@@ -1,4 +1,4 @@
-# 🌟 Projet d'Exploration des Émotions en 3D
+# 🌟 Projet Jardin des Emotions en 3D
 
 ## 📖 Description
 Ce projet est une expérience interactive en 3D utilisant **Babylon.js** pour explorer quatre émotions principales : **Joie, Tristesse, Peur et Colère**. Chaque émotion est représentée par une sphère dans une serre virtuelle. Des interactions permettent de modifier l’environnement et les effets visuels selon l’intensité choisie.
