@@ -1,7 +1,3 @@
-Voici le README mis à jour en fonction du nouveau code que tu as fourni. J’ai ajusté les sections pertinentes pour refléter les nouveaux éléments ajoutés (comme `grass.glb`, `pond_flower.glb`, `jap_door.glb`, `tree_jap.glb`, et les modifications dans la gestion de Chucky) tout en conservant la structure et le style d’origine :
-
----
-
 # 🌟 Projet Jardin des Émotions en 3D
 
 ## 📖 Description
