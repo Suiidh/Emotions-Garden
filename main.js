@@ -4,8 +4,99 @@ if (!canvas) {
 }
 const engine = new BABYLON.Engine(canvas, true);
 
-// Déclarer les variables GUI dans une portée globale
-let infoButton, descriptionModal, closeButton, intensityPanel, intensityButtons;
+// Déclarer les variables GUI et de chargement dans une portée globale
+let infoButton, descriptionModal, closeButton, intensityPanel, intensityButtons, loader;
+let elementsToLoad = 0; // Déplacer ici
+let elementsLoaded = 0; // Déplacer ici
+
+const checkAllElementsLoaded = () => {
+    if (elementsLoaded >= elementsToLoad) {
+        loader.isVisible = false;
+    }
+};
+
+const loadElement = (promise) => {
+    elementsToLoad++;
+    promise.then(() => {
+        elementsLoaded++;
+        checkAllElementsLoaded();
+    }).catch((error) => {
+        console.error("Erreur lors du chargement :", error);
+        elementsLoaded++;
+        checkAllElementsLoaded();
+    });
+};
+
+// Grass
+let grass = null;
+let grassClones = [];
+const grassPositions = [
+    new BABYLON.Vector3(-110, -10, -50),
+    new BABYLON.Vector3(90, -10, -120),
+    new BABYLON.Vector3(-80, -10, 50),
+    new BABYLON.Vector3(10, -10, 90),
+    new BABYLON.Vector3(140, -10, 80)
+];
+const loadGrass = (scene) => { // Ajouter scene comme paramètre
+    if (!grass) {
+        loadElement(BABYLON.SceneLoader.ImportMeshAsync("", "/objs/", "grass.glb", scene).then((result) => {
+            grass = result.meshes[0];
+            grass.position = grassPositions[0];
+            grass.scaling = new BABYLON.Vector3(0.5, 0.5, 0.5);
+            grass.isPickable = false;
+
+            // Create clones with fixed positions
+            grassPositions.slice(1).forEach((pos, index) => {
+                const clone = grass.clone(`grass_clone_${index}`);
+                clone.position = pos;
+                clone.scaling = new BABYLON.Vector3(0.5, 0.5, 0.5);
+                clone.isPickable = false;
+                grassClones.push(clone);
+            });
+        }));
+    }
+};
+
+// Pond Flower
+let pondFlower = null;
+const loadPondFlower = (scene) => { 
+    if (!pondFlower) {
+        loadElement(BABYLON.SceneLoader.ImportMeshAsync("", "/objs/", "pond_flower.glb", scene).then((result) => {
+            pondFlower = result.meshes[0];
+            pondFlower.position = new BABYLON.Vector3(30, 0, 30);
+            pondFlower.scaling = new BABYLON.Vector3(10, 10, 10);
+            pondFlower.isPickable = false;
+        }));
+    }
+};
+
+// Jap Door
+let JapDoor = null;
+const loadJapDoor = (scene) => { // Ajouter scene comme paramètre
+    if (!JapDoor) {
+        loadElement(BABYLON.SceneLoader.ImportMeshAsync("", "/objs/", "jap_door.glb", scene).then((result) => {
+            JapDoor = result.meshes[0];
+            JapDoor.position = new BABYLON.Vector3(140, 0, 0);
+            JapDoor.scaling = new BABYLON.Vector3(5, 5, 5);
+            JapDoor.rotation = new BABYLON.Vector3(0, Math.PI / 2, 0); 
+            JapDoor.isPickable = false;
+        }));
+    }
+};
+
+// Jap Tree
+let treeJap = null;
+const loadTreeJap = (scene) => { // Ajouter scene comme paramètre
+    if (!treeJap) {
+        loadElement(BABYLON.SceneLoader.ImportMeshAsync("", "/objs/", "tree_jap.glb", scene).then((result) => {
+            treeJap = result.meshes[0];
+            treeJap.position = new BABYLON.Vector3(-40, -40, -80);
+            treeJap.scaling = new BABYLON.Vector3(40, 40, 40);
+            treeJap.rotation = new BABYLON.Vector3(0, Math.PI / 2, 0); 
+            treeJap.isPickable = false;
+        }));
+    }
+};
 
 const createScene = () => {
     const scene = new BABYLON.Scene(engine);
@@ -51,27 +142,23 @@ const createScene = () => {
         }
     };
 
-    // Track loading status
-    let elementsToLoad = 0;
-    let elementsLoaded = 0;
+    // Initialize loader
+    loader = new BABYLON.GUI.Rectangle("loader");
+    loader.background = "black";
+    loader.color = "white";
+    loader.thickness = 0;
+    loader.zIndex = 5;
+    loader.isVisible = true;
+    const advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
+    advancedTexture.addControl(loader);
 
-    const checkAllElementsLoaded = () => {
-        if (elementsLoaded >= elementsToLoad) {
-            loader.isVisible = false;
-        }
-    };
-
-    const loadElement = (promise) => {
-        elementsToLoad++;
-        promise.then(() => {
-            elementsLoaded++;
-            checkAllElementsLoaded();
-        }).catch((error) => {
-            console.error("Erreur lors du chargement :", error);
-            elementsLoaded++;
-            checkAllElementsLoaded();
-        });
-    };
+    const loaderText = new BABYLON.GUI.TextBlock("loaderText");
+    loaderText.text = "Chargement...";
+    loaderText.color = "white";
+    loaderText.fontSize = 20;
+    loaderText.textHorizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_CENTER;
+    loaderText.textVerticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_CENTER;
+    loader.addControl(loaderText);
 
     // Charger la serre
     loadElement(BABYLON.SceneLoader.ImportMeshAsync("", "/objs/", "serre.glb", scene).then((result) => {
@@ -81,6 +168,14 @@ const createScene = () => {
             mesh.isPickable = false;
         });
     }));
+
+    // Load elements only in the first scene
+    if (currentMood === null) { // Only load these elements in the home scene
+        loadGrass(scene);
+        loadPondFlower(scene);
+        loadJapDoor(scene);
+        loadTreeJap(scene);
+    }
 
     // Arbres normaux
     let tree1 = null, tree2 = null, tree3 = null;
@@ -148,7 +243,6 @@ const createScene = () => {
             }));
         }
     };
-    loadNormalTrees();
 
     // Horror tree
     let horrorTree = null;
@@ -263,7 +357,6 @@ const createScene = () => {
             }));
         }
     };
-    loadPineCones();
 
     // Sol
     const ground = BABYLON.MeshBuilder.CreateDisc("ground", { radius: 195, tessellation: 10 }, scene);
@@ -431,8 +524,6 @@ const createScene = () => {
     butterflies.maxSize = 5;
 
     // GUI
-    const advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
-
     const notification = new BABYLON.GUI.TextBlock("notification");
     notification.text = "";
     notification.color = "white";
@@ -501,22 +592,6 @@ const createScene = () => {
             descriptionModal.isVisible = true;
         }
     });
-
-    const loader = new BABYLON.GUI.Rectangle("loader");
-    loader.background = "black";
-    loader.color = "white";
-    loader.thickness = 0;
-    loader.zIndex = 5;
-    loader.isVisible = true;
-    advancedTexture.addControl(loader);
-
-    const loaderText = new BABYLON.GUI.TextBlock("loaderText");
-    loaderText.text = "Chargement...";
-    loaderText.color = "white";
-    loaderText.fontSize = 20;
-    loaderText.textHorizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_CENTER;
-    loaderText.textVerticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_CENTER;
-    loader.addControl(loaderText);
 
     const screamerModal = new BABYLON.GUI.Rectangle("screamerModal");
     screamerModal.width = 1.0;
@@ -798,7 +873,7 @@ const createScene = () => {
                     } else if (currentIntensity === 3) {
                         thunderSystem.startThunder(1500);
                         moodLight.intensity = 2.5;
-                        moodLight.diffuse = new BABYLON.Color3(1, 0, 0);
+                        moodLight.diffuse = new BAScreamerModalABYLON.Color3(1, 0, 0);
                         const strobe = new BABYLON.Animation("strobe", "intensity", 120, BABYLON.Animation.ANIMATIONTYPE_FLOAT, BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);
                         strobe.setKeys([{ frame: 0, value: 2.5 }, { frame: 20, value: 0.8 }, { frame: 40, value: 2.5 }, { frame: 60, value: 0.8 }, { frame: 80, value: 2.5 }]);
                         moodLight.animations = [strobe];
@@ -880,6 +955,12 @@ const createScene = () => {
                 if (deadTree) { deadTree.dispose(); deadTree = null; }
                 if (chucky) { chucky.dispose(); chucky = null; } // Supprimer Chucky lors du changement d'humeur
                 flowers.forEach(flower => { if (flower) flower.dispose(); }); flowers = [];
+                if (JapDoor) { JapDoor.dispose(); JapDoor = null;  }
+                if (pondFlower) { pondFlower.dispose(); pondFlower = null; }
+                if (treeJap) {treeJap.dispose(); treeJap = null; }
+                if (grass) {grass.dispose(); grass = null; }
+                if (grassClones) {grassClones.forEach(clone => clone.dispose()); grassClones = [];}
+
 
                 switch (currentMood) {
                     case "Joie":
