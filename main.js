@@ -172,6 +172,34 @@ const createScene = () => {
         }
     };
 
+    // Modèle Chucky pour Peur (intensité 2 et 3)
+    let chucky = null;
+    const loadChucky = () => {
+        if (chucky) {
+            chucky.dispose();
+            chucky = null;
+        }
+        if (currentMood === "Peur" && currentIntensity >= 2) {
+            loadElement(BABYLON.SceneLoader.ImportMeshAsync("", "/objs/", "chucky.glb", scene).then((result) => {
+                if (currentMood === "Peur" && currentIntensity >= 2) {
+                    chucky = result.meshes[0];
+                    if (currentIntensity === 2) {
+                        chucky.position = new BABYLON.Vector3(0, 0, -50); // Position à intensité 2
+                        chucky.scaling = new BABYLON.Vector3(0.1, 0.1, 0.1); // Taille à intensité 2
+                        chucky.rotation = new BABYLON.Vector3(0, Math.PI, 0); // Tourne Chucky dos au joueur
+                    } else if (currentIntensity === 3) {
+                        chucky.position = new BABYLON.Vector3(-20, 0, 50); // Plus près à intensité 3
+                        chucky.scaling = new BABYLON.Vector3(0.2, 0.2, 0.2); // Plus grand à intensité 3
+                        chucky.rotation = new BABYLON.Vector3(0, 0, 0); // Tourne Chucky face au joueur
+                    }
+                    chucky.isPickable = false;
+                } else {
+                    result.meshes.forEach(mesh => mesh.dispose());
+                }
+            }));
+        }
+    };
+
     // Tombes pour Peur
     let tombstones = [];
     const tombstonePositions = [
@@ -337,6 +365,25 @@ const createScene = () => {
             }
         }
     };
+
+    // Explosion
+    const explosion = new BABYLON.ParticleSystem("explosion", 50, scene);
+    explosion.particleTexture = new BABYLON.Texture("/textures/explosion.png", scene);
+    explosion.emitter = new BABYLON.Vector3(0, 0, 0);
+    explosion.minEmitBox = new BABYLON.Vector3(-150, 0, -150);
+    explosion.maxEmitBox = new BABYLON.Vector3(150, 50, 150);
+    explosion.color1 = new BABYLON.Color4(1, 0.5, 0, 1);
+    explosion.color2 = new BABYLON.Color4(1, 0, 0, 1);
+    explosion.colorDead = new BABYLON.Color4(0, 0, 0, 0);
+    explosion.minSize = 20;
+    explosion.maxSize = 40;
+    explosion.emitRate = 10;
+    explosion.minLifeTime = 0.5;
+    explosion.maxLifeTime = 1.0;
+    explosion.direction1 = new BABYLON.Vector3(-1, 1, -1);
+    explosion.direction2 = new BABYLON.Vector3(1, 2, 1);
+    explosion.gravity = new BABYLON.Vector3(0, -10, 0);
+    explosion.blendMode = BABYLON.ParticleSystem.BLENDMODE_ADD;
 
     // Tonnerre
     const createThunderSystem = () => {
@@ -515,7 +562,6 @@ const createScene = () => {
     intensityPanel.metadata = { className: "intensity-panel" };
     advancedTexture.addControl(intensityPanel);
 
-
     intensityButtons = [];
     for (let i = 1; i <= 3; i++) {
         const button = BABYLON.GUI.Button.CreateSimpleButton(`intensity${i}`, "");
@@ -554,12 +600,13 @@ const createScene = () => {
         butterflies.stop();
         rain.stop();
         stopFireInstantly();
+        explosion.stop();
         thunderSystem.stopThunder();
         moodLight.intensity = 0;
         scene.fogDensity = 0;
         scene.animationsEnabled = true;
 
-        // Arrêter toutes les animations existantes
+        // Arrêter toutes les animations existantes et supprimer Chucky si intensité < 2 pour "Peur"
         flowers.forEach(flower => {
             if (flower && flower.animations.length > 0) {
                 scene.stopAnimation(flower);
@@ -579,6 +626,15 @@ const createScene = () => {
         if (deadTree && deadTree.animations.length > 0) {
             scene.stopAnimation(deadTree);
             deadTree.animations = [];
+        }
+        if (chucky) {
+            if (currentMood !== "Peur" || currentIntensity < 2) {
+                chucky.dispose();
+                chucky = null;
+            } else if (chucky.animations && chucky.animations.length > 0) {
+                scene.stopAnimation(chucky);
+                chucky.animations = [];
+            }
         }
 
         updateButtonColors();
@@ -681,6 +737,13 @@ const createScene = () => {
                         flicker.setKeys([{ frame: 0, value: 0.5 }, { frame: 15, value: 0 }, { frame: 30, value: 0.5 }, { frame: 45, value: 0 }, { frame: 60, value: 0.5 }]);
                         moodLight.animations = [flicker];
                         scene.beginAnimation(moodLight, 0, 60, true);
+                        loadChucky(); // Charger Chucky à intensité 2
+                        if (chucky) {
+                            const sway = new BABYLON.Animation("sway", "rotation.y", 60, BABYLON.Animation.ANIMATIONTYPE_FLOAT, BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);
+                            sway.setKeys([{ frame: 0, value: Math.PI }, { frame: 30, value: Math.PI + 0.1 }, { frame: 60, value: Math.PI }]);
+                            chucky.animations = [sway];
+                            scene.beginAnimation(chucky, 0, 60, true);
+                        }
                     } else if (currentIntensity === 3) {
                         scene.fogDensity = 0.0004;
                         thunderSystem.startThunder(2000);
@@ -691,47 +754,62 @@ const createScene = () => {
                         moodLight.animations = [strobe];
                         scene.beginAnimation(moodLight, 0, 120, true);
                         setTimeout(() => triggerScreamer(() => {}), 500);
+                        loadChucky(); // Charger Chucky à intensité 3 (plus près et plus grand)
+                        if (chucky) {
+                            const sway = new BABYLON.Animation("sway", "rotation.y", 60, BABYLON.Animation.ANIMATIONTYPE_FLOAT, BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);
+                            sway.setKeys([{ frame: 0, value: Math.PI }, { frame: 30, value: Math.PI + 0.2 }, { frame: 60, value: Math.PI }]);
+                            chucky.animations = [sway];
+                            scene.beginAnimation(chucky, 0, 60, true);
+                        }
                     }
                 }
                 break;
 
             case "Colere":
-                fire.emitRate = 400 * currentIntensity;
+                fire.emitRate = 400 * currentIntensity * currentIntensity;
                 fire.minEmitPower = 5 * currentIntensity;
                 fire.maxEmitPower = 10 * currentIntensity;
                 fire.start();
+                explosion.stop();
                 if (deadTree) {
                     if (currentIntensity === 1) {
                         moodLight.intensity = 0.5;
-                        moodLight.diffuse = new BABYLON.Color3(1, 0, 0);
+                        moodLight.diffuse = new BABYLON.Color3(1, 0.2, 0);
                         const crack = new BABYLON.Animation("crack", "rotation.y", 30, BABYLON.Animation.ANIMATIONTYPE_FLOAT, BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);
                         crack.setKeys([{ frame: 0, value: 0 }, { frame: 15, value: 0.05 }, { frame: 30, value: 0 }]);
                         deadTree.animations = [crack];
                         scene.beginAnimation(deadTree, 0, 30, true);
+                        scene.fogMode = BABYLON.Scene.FOGMODE_EXP;
+                        scene.fogColor = new BABYLON.Color3(0.5, 0, 0);
+                        scene.fogDensity = 0.0001;
                     } else if (currentIntensity === 2) {
                         thunderSystem.startThunder(5000);
-                        moodLight.intensity = 1;
-                        moodLight.diffuse = new BABYLON.Color3(1, 0, 0);
+                        moodLight.intensity = 1.2;
+                        moodLight.diffuse = new BABYLON.Color3(1, 0.1, 0);
                         const pulse = new BABYLON.Animation("pulse", "intensity", 60, BABYLON.Animation.ANIMATIONTYPE_FLOAT, BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);
-                        pulse.setKeys([{ frame: 0, value: 1 }, { frame: 30, value: 1.5 }, { frame: 60, value: 1 }]);
+                        pulse.setKeys([{ frame: 0, value: 1.2 }, { frame: 30, value: 1.8 }, { frame: 60, value: 1.2 }]);
                         moodLight.animations = [pulse];
                         scene.beginAnimation(moodLight, 0, 60, true);
                         const shake = new BABYLON.Animation("shake", "rotation.y", 30, BABYLON.Animation.ANIMATIONTYPE_FLOAT, BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);
-                        shake.setKeys([{ frame: 0, value: 0 }, { frame: 15, value: 0.1 }, { frame: 30, value: 0 }]);
+                        shake.setKeys([{ frame: 0, value: 0 }, { frame: 7, value: 0.15 }, { frame: 15, value: -0.15 }, { frame: 23, value: 0.15 }, { frame: 30, value: 0 }]);
                         deadTree.animations = [shake];
                         scene.beginAnimation(deadTree, 0, 30, true);
+                        scene.fogDensity = 0.0003;
                     } else if (currentIntensity === 3) {
-                        thunderSystem.startThunder(2000);
-                        moodLight.intensity = 2;
+                        thunderSystem.startThunder(1500);
+                        moodLight.intensity = 2.5;
                         moodLight.diffuse = new BABYLON.Color3(1, 0, 0);
                         const strobe = new BABYLON.Animation("strobe", "intensity", 120, BABYLON.Animation.ANIMATIONTYPE_FLOAT, BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);
-                        strobe.setKeys([{ frame: 0, value: 2 }, { frame: 30, value: 0.5 }, { frame: 60, value: 2 }, { frame: 90, value: 0.5 }, { frame: 120, value: 2 }]);
+                        strobe.setKeys([{ frame: 0, value: 2.5 }, { frame: 20, value: 0.8 }, { frame: 40, value: 2.5 }, { frame: 60, value: 0.8 }, { frame: 80, value: 2.5 }]);
                         moodLight.animations = [strobe];
                         scene.beginAnimation(moodLight, 0, 120, true);
                         const burn = new BABYLON.Animation("burn", "rotation.y", 60, BABYLON.Animation.ANIMATIONTYPE_FLOAT, BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);
-                        burn.setKeys([{ frame: 0, value: 0 }, { frame: 15, value: 0.2 }, { frame: 30, value: 0 }, { frame: 45, value: -0.2 }, { frame: 60, value: 0 }]);
+                        burn.setKeys([{ frame: 0, value: 0 }, { frame: 15, value: 0.3 }, { frame: 30, value: -0.3 }, { frame: 45, value: 0.3 }, { frame: 60, value: 0 }]);
                         deadTree.animations = [burn];
                         scene.beginAnimation(deadTree, 0, 60, true);
+                        scene.fogDensity = 0.0006;
+                        explosion.emitRate = 20;
+                        explosion.start();
                     }
                 }
                 break;
@@ -783,6 +861,7 @@ const createScene = () => {
                 butterflies.stop();
                 rain.stop();
                 stopFireInstantly();
+                explosion.stop();
                 thunderSystem.stopThunder();
                 screamerModal.isVisible = false;
                 tombstones.forEach(tomb => tomb.dispose());
@@ -799,6 +878,7 @@ const createScene = () => {
                 if (bench) { bench.dispose(); bench = null; }
                 if (horrorTree && currentMood !== "Peur") { horrorTree.dispose(); horrorTree = null; }
                 if (deadTree) { deadTree.dispose(); deadTree = null; }
+                if (chucky) { chucky.dispose(); chucky = null; } // Supprimer Chucky lors du changement d'humeur
                 flowers.forEach(flower => { if (flower) flower.dispose(); }); flowers = [];
 
                 switch (currentMood) {
